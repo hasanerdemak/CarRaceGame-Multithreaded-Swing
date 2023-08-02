@@ -1,7 +1,6 @@
-import javax.swing.*;
 import java.awt.*;
 
-public class Car extends JPanel {
+public class Car {
     public static final int SIZE = 10;
     private int carID;
     private int carX, carY;
@@ -88,6 +87,6 @@ public class Car extends JPanel {
 
         String str = (speed == 1) ? "Bot" : "Player";
         str += " " + carID;
-        g.drawString(str, carX - str.length()/2, carY - 5);
+        g.drawString(str, carX - str.length() / 2, carY - 5);
     }
 }

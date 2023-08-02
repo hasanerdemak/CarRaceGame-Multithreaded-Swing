@@ -4,6 +4,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class RaceUtils {
     private static Lock lock = new ReentrantLock();
+
     public static boolean isInOppositeDirection(int currentX, int currentY, int newX, int newY) {
         // Calculate the angle (in radians) between the current position and the new position
         double angleCurrent = Math.atan2(currentY - RacePanel.OUTER_CIRCLE_Y - (double) RacePanel.OUTER_CIRCLE_DIAMETER / 2,

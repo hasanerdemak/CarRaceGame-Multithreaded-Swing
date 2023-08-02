@@ -1,11 +1,10 @@
 import java.util.Random;
 
-public class Bot implements Runnable, PilotInterface {
+public class Bot implements PilotInterface {
     Random random = new Random();
     private int botID;
     private RacePanel racePanel;
     private Car car;
-    private int dx, dy;
     private int n;
 
     public Bot(RacePanel racePanel, Car car, int botID, int n) {
@@ -32,16 +31,17 @@ public class Bot implements Runnable, PilotInterface {
     public void run() {
         while (!RacePanel.gameOver) {
             handleMovement();
-            racePanel.repaint();
             try {
                 Thread.sleep(1000 / n);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            racePanel.repaint();
         }
     }
 
-    private void handleMovement() {
+    @Override
+    public void handleMovement() {
         if (RaceUtils.checkCollisionsForCar(car)) {
             setSleepTime(500);
         }
@@ -71,7 +71,7 @@ public class Bot implements Runnable, PilotInterface {
         car.moveCar(newDX, newDY);
     }
 
-
+    @Override
     public void setSleepTime(int sleepDuration) {
         car.disabled();
         try {
@@ -86,46 +86,3 @@ public class Bot implements Runnable, PilotInterface {
     }
 
 }
-
-
-
-/*
-    private void handleMovement() {
-        if (RaceUtils.checkCollisionsForCar(car)) {
-            setSleepTime(500);
-        }
-
-        do {
-
-        } while (RaceUtils.isInOppositeDirection(currentX, currentY, newX, newY))
-
-        int randomNumber = random.nextInt(4);
-        int currentX = car.getCarX();
-        int currentY = car.getCarY();
-
-        int speed = car.getSpeed();
-        int newDX = 0;
-        int newDY = 0;
-
-        if (randomNumber == 0) {
-            newDY = -speed;
-        } else if (randomNumber == 1) {
-            newDY = speed;
-        } else if (randomNumber == 2) {
-            newDX = -speed;
-        } else {
-            newDX = speed;
-        }
-
-        int newX = currentX + newDX;
-        int newY = currentY + newDY;
-
-        // Check if the new position is in the opposite direction of clockwise movement
-        if (RaceUtils.isInOppositeDirection(currentX, currentY, newX, newY)) {
-            handleMovement(); // Choose a new random direction
-            return;
-        }
-
-        car.moveCar(newDX, newDY);
-    }
- */

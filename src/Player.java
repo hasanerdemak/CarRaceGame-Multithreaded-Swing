@@ -1,11 +1,10 @@
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
-public class Player implements Runnable, KeyListener, PilotInterface {
+public class Player implements KeyListener, PilotInterface {
     private int playerID;
     private RacePanel racePanel;
     private Car car;
-    private int dx, dy;
     private int upKey;
     private int downKey;
     private int leftKey;
@@ -23,8 +22,6 @@ public class Player implements Runnable, KeyListener, PilotInterface {
         this.downKey = downKey;
         this.leftKey = leftKey;
         this.rightKey = rightKey;
-        this.dx = 0;
-        this.dy = 0;
     }
 
     @Override
@@ -45,12 +42,12 @@ public class Player implements Runnable, KeyListener, PilotInterface {
     public void run() {
         while (!RacePanel.gameOver) {
             handleMovement();
-            racePanel.repaint();
             try {
                 Thread.sleep(50); // Adjust this value for player speed
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            racePanel.repaint();
         }
     }
 
@@ -86,12 +83,14 @@ public class Player implements Runnable, KeyListener, PilotInterface {
         }
     }
 
-    private void handleMovement() {
+    @Override
+    public void handleMovement() {
         if (RaceUtils.checkCollisionsForCar(car)) {
             setSleepTime(500);
         }
 
         int speed = car.getSpeed();
+        int dx = 0, dy = 0;
         if (upKeyPressed && !downKeyPressed) {
             dy -= speed;
         } else if (downKeyPressed && !upKeyPressed) {
@@ -105,10 +104,9 @@ public class Player implements Runnable, KeyListener, PilotInterface {
         }
 
         car.moveCar(dx, dy);
-        dx = 0;
-        dy = 0;
     }
 
+    @Override
     public void setSleepTime(int sleepDuration) {
         car.disabled();
         try {

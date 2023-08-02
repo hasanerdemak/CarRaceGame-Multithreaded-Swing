@@ -4,6 +4,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class RacePanel extends JPanel {
     public static final int OUTER_CIRCLE_X = 20;
@@ -14,7 +16,6 @@ public class RacePanel extends JPanel {
     public static final int INNER_CIRCLE_DIAMETER = 400;
     public static ArrayList<Car> cars = new ArrayList<>();
     public static ArrayList<PilotInterface> pilots = new ArrayList<>();
-    public static ArrayList<Runnable> runnables = new ArrayList<>();
     public static boolean gameOver = false;
     private final int WIDTH = 800;
     private final int HEIGHT = 800;
@@ -24,6 +25,7 @@ public class RacePanel extends JPanel {
     private Timer timer;
     private long startTime;
     private JLabel timerLabel;
+    private static Lock lock = new ReentrantLock();
 
     public RacePanel(int n) {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
@@ -38,8 +40,6 @@ public class RacePanel extends JPanel {
         player2 = new Player(this, greenCar, 2, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT);
         pilots.add(player1);
         pilots.add(player2);
-        runnables.add(player1);
-        runnables.add(player2);
         addKeyListener(player1);
         addKeyListener(player2);
 
@@ -49,10 +49,8 @@ public class RacePanel extends JPanel {
             int startY = 385;
             var newCar = new Car(2 + i, startX, startY, 1, Color.BLACK);
             bots[i] = new Bot(this, newCar, i + 1, n);
-            add(newCar);
             cars.add(newCar);
             pilots.add(bots[i]);
-            runnables.add(bots[i]);
         }
 
         timerLabel = new JLabel("00:00:00");
@@ -61,7 +59,6 @@ public class RacePanel extends JPanel {
         startTime = System.currentTimeMillis();
         timer = new Timer(10, new TimerListener());
 
-        //drawParkour(getGraphics());
     }
 
     public void startRace() {
@@ -69,8 +66,8 @@ public class RacePanel extends JPanel {
             return;
         }
 
-        for (var runnable: runnables) {
-            var newThread = new Thread(runnable);
+        for (var pilot : pilots) {
+            var newThread = new Thread(pilot);
             newThread.start();
         }
 
@@ -93,12 +90,17 @@ public class RacePanel extends JPanel {
 
     @Override
     protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        g.drawLine(20, 390, 20 + (OUTER_CIRCLE_DIAMETER - INNER_CIRCLE_DIAMETER) / 2, 390);
-        drawParkour(g);
-        drawSquares(g);
+        lock.lock();
+        try {
+            super.paintComponent(g);
+            g.drawLine(20, 390, 20 + (OUTER_CIRCLE_DIAMETER - INNER_CIRCLE_DIAMETER) / 2, 390);
+            drawParkour(g);
+            drawSquares(g);
 
-        checkWinner();
+            checkWinner();
+        } finally {
+            lock.unlock();
+        }
     }
 
     private void drawParkour(Graphics g) {
@@ -121,7 +123,7 @@ public class RacePanel extends JPanel {
                     gameOver = true;
                     timer.stop();
                     String pilotType = (pilot instanceof Player) ? "Oyuncu" : "Bot";
-                    String message = pilot.getID() + ". " + pilotType + " Kazandı! Süresi " + timerLabel.getText();
+                    String message = pilot.getID()+1 + ". " + pilotType + " Kazandı! Süresi " + timerLabel.getText();
                     JOptionPane.showMessageDialog(this, message, "Oyun Bitti", JOptionPane.INFORMATION_MESSAGE);
                     break;
                 }
@@ -132,6 +134,7 @@ public class RacePanel extends JPanel {
     private class TimerListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
+
             long currentTime = System.currentTimeMillis();
             long elapsedTime = currentTime - startTime;
 
@@ -141,6 +144,7 @@ public class RacePanel extends JPanel {
 
             String timeStr = String.format("%02d:%02d:%02d", minutes, seconds, millis / 10);
             timerLabel.setText(timeStr);
+
         }
     }
 }
