@@ -34,7 +34,7 @@ public class RaceUtils {
             return true;
         }
 
-        lock.lock();
+        //lock.lock();
         try {
             for (var tempCar : RacePanel.cars) {
                 if (!car.equals(tempCar)) {
@@ -44,7 +44,7 @@ public class RaceUtils {
                 }
             }
         } finally {
-            lock.unlock();
+            //lock.unlock();
         }
 
         return false;

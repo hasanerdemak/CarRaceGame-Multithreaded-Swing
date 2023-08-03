@@ -3,15 +3,15 @@ import java.util.Random;
 public class Bot implements PilotInterface {
     Random random = new Random();
     private int botID;
-    private RacePanel racePanel;
     private Car car;
     private int n;
 
-    public Bot(RacePanel racePanel, Car car, int botID, int n) {
+    public Bot(Car car, int botID, int n) {
         this.car = car;
-        this.racePanel = racePanel;
         this.botID = botID;
         this.n = n;
+
+        car.setLabel("Bot " + botID);
     }
 
     @Override
@@ -36,7 +36,6 @@ public class Bot implements PilotInterface {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            racePanel.repaint();
         }
     }
 
@@ -82,7 +81,7 @@ public class Bot implements PilotInterface {
         car.enabled();
         int dx = car.getLastX() - car.getCarX();
         int dy = car.getLastY() - car.getCarY();
-        car.moveCar(3 * dx, 3 * dy);
+        car.moveCar(dx, dy);
     }
 
 }

@@ -3,7 +3,6 @@ import java.awt.event.KeyListener;
 
 public class Player implements KeyListener, PilotInterface {
     private int playerID;
-    private RacePanel racePanel;
     private Car car;
     private int upKey;
     private int downKey;
@@ -14,14 +13,18 @@ public class Player implements KeyListener, PilotInterface {
     private boolean leftKeyPressed;
     private boolean rightKeyPressed;
 
-    public Player(RacePanel racePanel, Car car, int playerID, int upKey, int downKey, int leftKey, int rightKey) {
-        this.racePanel = racePanel;
+    private int n;
+
+    public Player(Car car, int playerID, int n, int upKey, int downKey, int leftKey, int rightKey) {
         this.car = car;
         this.playerID = playerID;
+        this.n = n;
         this.upKey = upKey;
         this.downKey = downKey;
         this.leftKey = leftKey;
         this.rightKey = rightKey;
+
+        car.setLabel("Player " + playerID);
     }
 
     @Override
@@ -40,14 +43,14 @@ public class Player implements KeyListener, PilotInterface {
 
     @Override
     public void run() {
+        upKeyPressed = downKeyPressed = rightKeyPressed = leftKeyPressed = false;
         while (!RacePanel.gameOver) {
             handleMovement();
             try {
-                Thread.sleep(50); // Adjust this value for player speed
+                Thread.sleep(1000 / n); // Adjust this value for player speed
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            racePanel.repaint();
         }
     }
 

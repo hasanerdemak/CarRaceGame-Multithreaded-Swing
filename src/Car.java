@@ -9,6 +9,8 @@ public class Car {
     private Color color;
     private boolean disabled;
 
+    private String label = "";
+
     public Car(int carID, int carX, int carY, int speed, Color color) {
         this.carID = carID;
         this.carX = carX;
@@ -56,6 +58,14 @@ public class Car {
         this.speed = speed;
     }
 
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
     public void disabled() {
         disabled = true;
     }
@@ -84,9 +94,6 @@ public class Car {
         }
         g.setColor(currentColor);
         g.fillRect(carX, carY, SIZE, SIZE);
-
-        String str = (speed == 1) ? "Bot" : "Player";
-        str += " " + carID;
-        g.drawString(str, carX - str.length() / 2, carY - 5);
+        g.drawString(label, carX - ((label.length() * g.getFont().getSize()) / 8), carY - 5);
     }
 }

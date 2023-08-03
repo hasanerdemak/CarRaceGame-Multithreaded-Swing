@@ -19,7 +19,7 @@ public class CarRace extends JFrame {
         add(racePanel);
         pack();
 
-        racePanel.startRace();
+        racePanel.startGame();
         racePanel.requestFocus();
 
         setVisible(true);

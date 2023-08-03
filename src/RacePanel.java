@@ -1,7 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.concurrent.locks.Lock;
@@ -17,6 +15,7 @@ public class RacePanel extends JPanel {
     public static ArrayList<Car> cars = new ArrayList<>();
     public static ArrayList<PilotInterface> pilots = new ArrayList<>();
     public static boolean gameOver = false;
+    private static Lock lock = new ReentrantLock();
     private final int WIDTH = 800;
     private final int HEIGHT = 800;
     private Player player1;
@@ -25,19 +24,18 @@ public class RacePanel extends JPanel {
     private Timer timer;
     private long startTime;
     private JLabel timerLabel;
-    private static Lock lock = new ReentrantLock();
 
     public RacePanel(int n) {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setLayout(new FlowLayout(FlowLayout.LEFT));
         setFocusable(true);
 
-        var redCar = new Car(0, 25, 385, 4, Color.RED);
-        var greenCar = new Car(1, 45, 385, 2, Color.GREEN);
+        var redCar = new Car(1, 25, 385, 2, Color.RED);
+        var greenCar = new Car(2, 45, 385, 2, Color.GREEN);
         cars.add(redCar);
         cars.add(greenCar);
-        player1 = new Player(this, redCar, 1, 'W', 'S', 'A', 'D');
-        player2 = new Player(this, greenCar, 2, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT);
+        player1 = new Player(redCar, 1, n, 'W', 'S', 'A', 'D');
+        player2 = new Player(greenCar, 2, n, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT);
         pilots.add(player1);
         pilots.add(player2);
         addKeyListener(player1);
@@ -47,8 +45,8 @@ public class RacePanel extends JPanel {
         for (int i = 0; i < bots.length; i++) {
             int startX = 45 + (i + 1) * 20;
             int startY = 385;
-            var newCar = new Car(2 + i, startX, startY, 1, Color.BLACK);
-            bots[i] = new Bot(this, newCar, i + 1, n);
+            var newCar = new Car(3 + i, startX, startY, 1, Color.BLACK);
+            bots[i] = new Bot(newCar, i + 1, n);
             cars.add(newCar);
             pilots.add(bots[i]);
         }
@@ -56,15 +54,30 @@ public class RacePanel extends JPanel {
         timerLabel = new JLabel("00:00:00");
         timerLabel.setBounds(10, 10, 100, 30);
         add(timerLabel, FlowLayout.LEFT);
-        startTime = System.currentTimeMillis();
-        timer = new Timer(10, new TimerListener());
+
+        timer = new Timer(10, e -> {
+            repaint();
+            long currentTime = System.currentTimeMillis();
+            long elapsedTime = currentTime - startTime;
+
+            int minutes = (int) (elapsedTime / 60000);
+            int seconds = (int) ((elapsedTime % 60000) / 1000);
+            int millis = (int) (elapsedTime % 1000);
+
+            String timeStr = String.format("%02d:%02d:%02d", minutes, seconds, millis / 10);
+            timerLabel.setText(timeStr);
+
+            repaint();
+            checkWinner();
+        });
 
     }
 
-    public void startRace() {
+    public void startGame() {
         if (timer.isRunning()) {
             return;
         }
+        startTime = System.currentTimeMillis();
 
         for (var pilot : pilots) {
             var newThread = new Thread(pilot);
@@ -72,8 +85,15 @@ public class RacePanel extends JPanel {
         }
 
         timer.start();
+    }
 
-        setVisible(true);
+    private void resetGame() {
+        gameOver = false;
+        for (int i = 0; i < pilots.size(); i++) {
+            var car = pilots.get(i).getCar();
+            car.setCarX(25 + i * 20);
+            car.setCarY(385);
+        }
     }
 
     public Bot[] getBots() {
@@ -89,18 +109,11 @@ public class RacePanel extends JPanel {
     }
 
     @Override
-    protected void paintComponent(Graphics g) {
-        lock.lock();
-        try {
-            super.paintComponent(g);
-            g.drawLine(20, 390, 20 + (OUTER_CIRCLE_DIAMETER - INNER_CIRCLE_DIAMETER) / 2, 390);
-            drawParkour(g);
-            drawSquares(g);
-
-            checkWinner();
-        } finally {
-            lock.unlock();
-        }
+    protected synchronized void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        g.drawLine(20, 390, 20 + (OUTER_CIRCLE_DIAMETER - INNER_CIRCLE_DIAMETER) / 2, 390);
+        drawParkour(g);
+        drawSquares(g);
     }
 
     private void drawParkour(Graphics g) {
@@ -120,31 +133,36 @@ public class RacePanel extends JPanel {
             for (var pilot : pilots) {
                 var car = pilot.getCar();
                 if (RaceUtils.isCarPassedFinishLine(car)) {
+                    //repaint();
                     gameOver = true;
                     timer.stop();
                     String pilotType = (pilot instanceof Player) ? "Oyuncu" : "Bot";
-                    String message = pilot.getID()+1 + ". " + pilotType + " Kazandı! Süresi " + timerLabel.getText();
-                    JOptionPane.showMessageDialog(this, message, "Oyun Bitti", JOptionPane.INFORMATION_MESSAGE);
+                    String message = pilot.getID() + ". " + pilotType + " Kazandı! Süresi " + timerLabel.getText();
+                    //JOptionPane.showMessageDialog(this, message, "Oyun Bitti", JOptionPane.INFORMATION_MESSAGE);
+                    String[] options = {"Yeniden Başla", "Oyundan Çık"};
+
+                    // OptionPane'ı oluştur ve kullanıcının seçtiği düğmenin indeksini al
+                    int choice = JOptionPane.showOptionDialog(null,
+                            message,
+                            "Oyun Bitti",
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.INFORMATION_MESSAGE,
+                            null,
+                            options,
+                            options[0]);
+
+                    if (choice == JOptionPane.YES_OPTION) { // Restart
+                        resetGame();
+                        startGame();
+                    } else if (choice == JOptionPane.NO_OPTION) {
+                        System.exit(0);
+                    } else if (choice == JOptionPane.CLOSED_OPTION) {
+                        System.exit(0);
+                    }
                     break;
                 }
             }
         }
     }
 
-    private class TimerListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-
-            long currentTime = System.currentTimeMillis();
-            long elapsedTime = currentTime - startTime;
-
-            int minutes = (int) (elapsedTime / 60000);
-            int seconds = (int) ((elapsedTime % 60000) / 1000);
-            int millis = (int) (elapsedTime % 1000);
-
-            String timeStr = String.format("%02d:%02d:%02d", minutes, seconds, millis / 10);
-            timerLabel.setText(timeStr);
-
-        }
-    }
 }
