@@ -109,7 +109,7 @@ public class RacePanel extends JPanel {
     }
 
     @Override
-    protected synchronized void paintComponent(Graphics g) {
+    protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         g.drawLine(20, 390, 20 + (OUTER_CIRCLE_DIAMETER - INNER_CIRCLE_DIAMETER) / 2, 390);
         drawParkour(g);

@@ -12,7 +12,6 @@ public class Player implements KeyListener, PilotInterface {
     private boolean downKeyPressed;
     private boolean leftKeyPressed;
     private boolean rightKeyPressed;
-
     private int n;
 
     public Player(Car car, int playerID, int n, int upKey, int downKey, int leftKey, int rightKey) {
