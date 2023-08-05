@@ -4,12 +4,11 @@ public class Bot implements PilotInterface {
     Random random = new Random();
     private int botID;
     private Car car;
-    private int n;
+    private int fps = 5;
 
-    public Bot(Car car, int botID, int n) {
+    public Bot(Car car, int botID) {
         this.car = car;
         this.botID = botID;
-        this.n = n;
 
         car.setLabel("Bot " + botID);
     }
@@ -19,8 +18,14 @@ public class Bot implements PilotInterface {
         return botID;
     }
 
+    @Override
     public Car getCar() {
         return car;
+    }
+
+    @Override
+    public void setFPS(int fps) {
+        this.fps = fps;
     }
 
     public void setCar(Car car) {
@@ -32,7 +37,7 @@ public class Bot implements PilotInterface {
         while (!RacePanel.gameOver) {
             handleMovement();
             try {
-                Thread.sleep(1000 / n);
+                Thread.sleep(1000 / fps);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

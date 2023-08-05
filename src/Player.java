@@ -12,12 +12,11 @@ public class Player implements KeyListener, PilotInterface {
     private boolean downKeyPressed;
     private boolean leftKeyPressed;
     private boolean rightKeyPressed;
-    private int n;
+    private int fps = 5;
 
-    public Player(Car car, int playerID, int n, int upKey, int downKey, int leftKey, int rightKey) {
+    public Player(Car car, int playerID, int upKey, int downKey, int leftKey, int rightKey) {
         this.car = car;
         this.playerID = playerID;
-        this.n = n;
         this.upKey = upKey;
         this.downKey = downKey;
         this.leftKey = leftKey;
@@ -36,6 +35,11 @@ public class Player implements KeyListener, PilotInterface {
         return car;
     }
 
+    @Override
+    public void setFPS(int fps) {
+        this.fps = fps;
+    }
+
     public void setCar(Car car) {
         this.car = car;
     }
@@ -46,7 +50,7 @@ public class Player implements KeyListener, PilotInterface {
         while (!RacePanel.gameOver) {
             handleMovement();
             try {
-                Thread.sleep(1000 / n); // Adjust this value for player speed
+                Thread.sleep(1000 / fps); // Adjust this value for player speed
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -93,17 +97,11 @@ public class Player implements KeyListener, PilotInterface {
 
         int speed = car.getSpeed();
         int dx = 0, dy = 0;
-        if (upKeyPressed && !downKeyPressed) {
-            dy -= speed;
-        } else if (downKeyPressed && !upKeyPressed) {
-            dy += speed;
-        }
 
-        if (leftKeyPressed && !rightKeyPressed) {
-            dx -= speed;
-        } else if (rightKeyPressed && !leftKeyPressed) {
-            dx += speed;
-        }
+        if (upKeyPressed) dy -= speed;
+        if (downKeyPressed) dy += speed;
+        if (leftKeyPressed) dx -= speed;
+        if (rightKeyPressed) dx += speed;
 
         car.moveCar(dx, dy);
     }

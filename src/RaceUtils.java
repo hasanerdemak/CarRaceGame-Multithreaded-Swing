@@ -34,17 +34,12 @@ public class RaceUtils {
             return true;
         }
 
-        //lock.lock();
-        try {
-            for (var tempCar : RacePanel.cars) {
-                if (!car.equals(tempCar)) {
-                    if (checkCollision(car, tempCar)) {
-                        return true;
-                    }
+        for (var tempCar : RacePanel.cars) {
+            if (!car.equals(tempCar)) {
+                if (checkCollision(car, tempCar)) {
+                    return true;
                 }
             }
-        } finally {
-            //lock.unlock();
         }
 
         return false;
@@ -54,55 +49,36 @@ public class RaceUtils {
         int outerCircleCenterX = RacePanel.OUTER_CIRCLE_X + (RacePanel.OUTER_CIRCLE_DIAMETER / 2);
         int outerCircleCenterY = RacePanel.OUTER_CIRCLE_Y + (RacePanel.OUTER_CIRCLE_DIAMETER / 2);
         int outerCircleRadiusSquared = (RacePanel.OUTER_CIRCLE_DIAMETER / 2) * (RacePanel.OUTER_CIRCLE_DIAMETER / 2);
-
         int innerCircleCenterX = RacePanel.INNER_CIRCLE_X + (RacePanel.INNER_CIRCLE_DIAMETER / 2);
         int innerCircleCenterY = RacePanel.INNER_CIRCLE_Y + (RacePanel.INNER_CIRCLE_DIAMETER / 2);
         int innerCircleRadiusSquared = (RacePanel.INNER_CIRCLE_DIAMETER / 2) * (RacePanel.INNER_CIRCLE_DIAMETER / 2);
 
-        // Kare'nin köşeleri
         int carLeft = car.getCarX();
         int carRight = car.getCarX() + Car.SIZE;
         int carTop = car.getCarY();
         int carBottom = car.getCarY() + Car.SIZE;
 
-        // Kare'nin sol üst köşesi
-        int distanceSquared1 = (outerCircleCenterX - carLeft) * (outerCircleCenterX - carLeft)
-                + (outerCircleCenterY - carTop) * (outerCircleCenterY - carTop);
-        boolean isInsideBigCircle = distanceSquared1 <= outerCircleRadiusSquared;
-        boolean isOutsideSmallCircle = distanceSquared1 > innerCircleRadiusSquared;
-
-        if (!(isInsideBigCircle && isOutsideSmallCircle)) {
-            return false;
-        }
-
-        // Kare'nin sağ üst köşesi
-        int distanceSquared2 = (outerCircleCenterX - carRight) * (outerCircleCenterX - carRight)
-                + (outerCircleCenterY - carTop) * (outerCircleCenterY - carTop);
-        isInsideBigCircle = distanceSquared2 <= outerCircleRadiusSquared;
-        isOutsideSmallCircle = distanceSquared2 > innerCircleRadiusSquared;
-
-        if (!(isInsideBigCircle && isOutsideSmallCircle)) {
-            return false;
-        }
-
-        // Kare'nin sol alt köşesi
-        int distanceSquared3 = (outerCircleCenterX - carLeft) * (outerCircleCenterX - carLeft)
-                + (outerCircleCenterY - carBottom) * (outerCircleCenterY - carBottom);
-        isInsideBigCircle = distanceSquared3 <= outerCircleRadiusSquared;
-        isOutsideSmallCircle = distanceSquared3 > innerCircleRadiusSquared;
-
-        if (!(isInsideBigCircle && isOutsideSmallCircle)) {
-            return false;
-        }
-
-        // Kare'nin sağ alt köşesi
-        int distanceSquared4 = (outerCircleCenterX - carRight) * (outerCircleCenterX - carRight)
-                + (outerCircleCenterY - carBottom) * (outerCircleCenterY - carBottom);
-        isInsideBigCircle = distanceSquared4 <= outerCircleRadiusSquared;
-        isOutsideSmallCircle = distanceSquared4 > innerCircleRadiusSquared;
-
-        return isInsideBigCircle && isOutsideSmallCircle;
+        // Check if all four corners of the car are inside the parkour
+        return isInsideCircle(carLeft, carTop, outerCircleCenterX, outerCircleCenterY, outerCircleRadiusSquared)
+                && isOutsideCircle(carLeft, carTop, innerCircleCenterX, innerCircleCenterY, innerCircleRadiusSquared)
+                && isInsideCircle(carRight, carTop, outerCircleCenterX, outerCircleCenterY, outerCircleRadiusSquared)
+                && isOutsideCircle(carRight, carTop, innerCircleCenterX, innerCircleCenterY, innerCircleRadiusSquared)
+                && isInsideCircle(carLeft, carBottom, outerCircleCenterX, outerCircleCenterY, outerCircleRadiusSquared)
+                && isOutsideCircle(carLeft, carBottom, innerCircleCenterX, innerCircleCenterY, innerCircleRadiusSquared)
+                && isInsideCircle(carRight, carBottom, outerCircleCenterX, outerCircleCenterY, outerCircleRadiusSquared)
+                && isOutsideCircle(carRight, carBottom, innerCircleCenterX, innerCircleCenterY, innerCircleRadiusSquared);
     }
+
+    private static boolean isInsideCircle(int x, int y, int centerX, int centerY, int radiusSquared) {
+        int distanceSquared = (centerX - x) * (centerX - x) + (centerY - y) * (centerY - y);
+        return distanceSquared <= radiusSquared;
+    }
+
+    private static boolean isOutsideCircle(int x, int y, int centerX, int centerY, int radiusSquared) {
+        int distanceSquared = (centerX - x) * (centerX - x) + (centerY - y) * (centerY - y);
+        return distanceSquared > radiusSquared;
+    }
+
 
     public static boolean checkCollision(Car car1, Car car2) {
         Rectangle rect1 = car1.getBounds();

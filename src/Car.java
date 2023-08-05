@@ -6,8 +6,9 @@ public class Car {
     private int carX, carY;
     private int lastX, lastY;
     private int speed;
-    private Color color;
     private boolean disabled;
+    private Color color;
+    private Color disabledColor; // New variable to store the disabled color
 
     private String label = "";
 
@@ -17,6 +18,7 @@ public class Car {
         this.carY = carY;
         this.speed = speed;
         this.color = color;
+        this.disabledColor = new Color(color.getRed() / 2, color.getGreen() / 2, color.getBlue() / 2); // Initialize the disabled color
 
         lastX = carX;
         lastY = carY;
@@ -82,16 +84,7 @@ public class Car {
     }
 
     public void draw(Graphics g) {
-        //g.setColor(new Color(236, 236, 236));
-        //g.fillRect(lastX, lastY, SIZE, SIZE);
-
-        Color currentColor = color;
-        if (disabled) {
-            int paleRed = currentColor.getRed() / 2;
-            int paleGreen = currentColor.getGreen() / 2;
-            int paleBlue = currentColor.getBlue() / 2;
-            currentColor = new Color(paleRed, paleGreen, paleBlue);
-        }
+        Color currentColor = disabled ? disabledColor : color;
         g.setColor(currentColor);
         g.fillRect(carX, carY, SIZE, SIZE);
         g.drawString(label, carX - ((label.length() * g.getFont().getSize()) / 8), carY - 5);

@@ -3,6 +3,8 @@ public interface PilotInterface extends Runnable {
 
     Car getCar();
 
+    void setFPS(int fps);
+
     void handleMovement();
 
     void setSleepTime(int sleepDuration);

@@ -2,8 +2,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class RacePanel extends JPanel {
     public static final int OUTER_CIRCLE_X = 20;
@@ -15,7 +13,6 @@ public class RacePanel extends JPanel {
     public static ArrayList<Car> cars = new ArrayList<>();
     public static ArrayList<PilotInterface> pilots = new ArrayList<>();
     public static boolean gameOver = false;
-    private static Lock lock = new ReentrantLock();
     private final int WIDTH = 800;
     private final int HEIGHT = 800;
     private Player player1;
@@ -24,8 +21,9 @@ public class RacePanel extends JPanel {
     private Timer timer;
     private long startTime;
     private JLabel timerLabel;
+    private int fps = 5;
 
-    public RacePanel(int n) {
+    public RacePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setLayout(new FlowLayout(FlowLayout.LEFT));
         setFocusable(true);
@@ -34,8 +32,8 @@ public class RacePanel extends JPanel {
         var greenCar = new Car(2, 45, 385, 2, Color.GREEN);
         cars.add(redCar);
         cars.add(greenCar);
-        player1 = new Player(redCar, 1, n, 'W', 'S', 'A', 'D');
-        player2 = new Player(greenCar, 2, n, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT);
+        player1 = new Player(redCar, 1, 'W', 'S', 'A', 'D');
+        player2 = new Player(greenCar, 2, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT);
         pilots.add(player1);
         pilots.add(player2);
         addKeyListener(player1);
@@ -46,7 +44,7 @@ public class RacePanel extends JPanel {
             int startX = 45 + (i + 1) * 20;
             int startY = 385;
             var newCar = new Car(3 + i, startX, startY, 1, Color.BLACK);
-            bots[i] = new Bot(newCar, i + 1, n);
+            bots[i] = new Bot(newCar, i + 1);
             cars.add(newCar);
             pilots.add(bots[i]);
         }
@@ -73,6 +71,10 @@ public class RacePanel extends JPanel {
 
     }
 
+    public void setFPS(int fps){
+        this.fps = fps;
+    }
+
     public void startGame() {
         if (timer.isRunning()) {
             return;
@@ -80,6 +82,7 @@ public class RacePanel extends JPanel {
         startTime = System.currentTimeMillis();
 
         for (var pilot : pilots) {
+            pilot.setFPS(fps);
             var newThread = new Thread(pilot);
             newThread.start();
         }
@@ -113,7 +116,7 @@ public class RacePanel extends JPanel {
         super.paintComponent(g);
         g.drawLine(20, 390, 20 + (OUTER_CIRCLE_DIAMETER - INNER_CIRCLE_DIAMETER) / 2, 390);
         drawParkour(g);
-        drawSquares(g);
+        drawCars(g);
     }
 
     private void drawParkour(Graphics g) {
@@ -122,7 +125,7 @@ public class RacePanel extends JPanel {
         g.drawOval(INNER_CIRCLE_X, INNER_CIRCLE_Y, INNER_CIRCLE_DIAMETER, INNER_CIRCLE_DIAMETER);
     }
 
-    public void drawSquares(Graphics g) {
+    private void drawCars(Graphics g) {
         for (var car : cars) {
             car.draw(g);
         }
