@@ -18,7 +18,8 @@ public class RacePanel extends JPanel {
     private Player player1;
     private Player player2;
     private Bot[] bots;
-    private Timer timer;
+    private Timer stopwatchTimer;
+    private Timer paintRaceTimer;
     private long startTime;
     private JLabel timerLabel;
     private int fps = 5;
@@ -53,8 +54,7 @@ public class RacePanel extends JPanel {
         timerLabel.setBounds(10, 10, 100, 30);
         add(timerLabel, FlowLayout.LEFT);
 
-        timer = new Timer(10, e -> {
-            repaint();
+        stopwatchTimer = new Timer(10, e -> {
             long currentTime = System.currentTimeMillis();
             long elapsedTime = currentTime - startTime;
 
@@ -64,21 +64,20 @@ public class RacePanel extends JPanel {
 
             String timeStr = String.format("%02d:%02d:%02d", minutes, seconds, millis / 10);
             timerLabel.setText(timeStr);
+        });
 
+        paintRaceTimer = new Timer(10, e -> {
             repaint();
             checkWinner();
         });
 
     }
 
-    public void setFPS(int fps){
+    public void setFPS(int fps) {
         this.fps = fps;
     }
 
     public void startGame() {
-        if (timer.isRunning()) {
-            return;
-        }
         startTime = System.currentTimeMillis();
 
         for (var pilot : pilots) {
@@ -87,7 +86,10 @@ public class RacePanel extends JPanel {
             newThread.start();
         }
 
-        timer.start();
+        paintRaceTimer.setDelay(1000 / fps);
+
+        stopwatchTimer.start();
+        paintRaceTimer.start();
     }
 
     private void resetGame() {
@@ -131,28 +133,21 @@ public class RacePanel extends JPanel {
         }
     }
 
-    public void checkWinner() {
+    public synchronized void checkWinner() {
         if (!gameOver) {
             for (var pilot : pilots) {
                 var car = pilot.getCar();
                 if (RaceUtils.isCarPassedFinishLine(car)) {
-                    //repaint();
                     gameOver = true;
-                    timer.stop();
+                    stopwatchTimer.stop();
+                    paintRaceTimer.stop();
                     String pilotType = (pilot instanceof Player) ? "Oyuncu" : "Bot";
                     String message = pilot.getID() + ". " + pilotType + " Kazandı! Süresi " + timerLabel.getText();
                     //JOptionPane.showMessageDialog(this, message, "Oyun Bitti", JOptionPane.INFORMATION_MESSAGE);
                     String[] options = {"Yeniden Başla", "Oyundan Çık"};
 
                     // OptionPane'ı oluştur ve kullanıcının seçtiği düğmenin indeksini al
-                    int choice = JOptionPane.showOptionDialog(null,
-                            message,
-                            "Oyun Bitti",
-                            JOptionPane.YES_NO_OPTION,
-                            JOptionPane.INFORMATION_MESSAGE,
-                            null,
-                            options,
-                            options[0]);
+                    int choice = JOptionPane.showOptionDialog(null, message, "Oyun Bitti", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
 
                     if (choice == JOptionPane.YES_OPTION) { // Restart
                         resetGame();

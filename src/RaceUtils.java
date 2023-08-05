@@ -1,9 +1,6 @@
 import java.awt.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class RaceUtils {
-    private static Lock lock = new ReentrantLock();
 
     public static boolean isInOppositeDirection(int currentX, int currentY, int newX, int newY) {
         // Calculate the angle (in radians) between the current position and the new position
