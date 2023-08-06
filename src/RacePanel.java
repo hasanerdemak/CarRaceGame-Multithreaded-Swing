@@ -4,15 +4,11 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 
 public class RacePanel extends JPanel {
-    public static final int OUTER_CIRCLE_X = 20;
-    public static final int OUTER_CIRCLE_Y = 40;
-    public static final int OUTER_CIRCLE_DIAMETER = 700;
-    public static final int INNER_CIRCLE_X = 170;
-    public static final int INNER_CIRCLE_Y = 190;
-    public static final int INNER_CIRCLE_DIAMETER = 400;
-    public static ArrayList<Car> cars = new ArrayList<>();
-    public static ArrayList<PilotInterface> pilots = new ArrayList<>();
-    public static boolean gameOver = false;
+    private static RacePanel instance;
+    private Parkour parkour = new Parkour();
+    private ArrayList<Car> cars = new ArrayList<>();
+    private ArrayList<PilotInterface> pilots = new ArrayList<>();
+    private boolean gameOver = false;
     private final int WIDTH = 800;
     private final int HEIGHT = 800;
     private Player player1;
@@ -24,7 +20,7 @@ public class RacePanel extends JPanel {
     private JLabel timerLabel;
     private int fps = 5;
 
-    public RacePanel() {
+    private RacePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setLayout(new FlowLayout(FlowLayout.LEFT));
         setFocusable(true);
@@ -73,6 +69,29 @@ public class RacePanel extends JPanel {
 
     }
 
+    public static RacePanel getInstance() {
+        if (instance == null) {
+            instance = new RacePanel();
+        }
+        return instance;
+    }
+
+    public ArrayList<Car> getCars() {
+        return cars;
+    }
+
+    public ArrayList<PilotInterface> getPilots() {
+        return pilots;
+    }
+
+    public boolean isGameOver() {
+        return gameOver;
+    }
+
+    public Parkour getParkour() {
+        return parkour;
+    }
+
     public void setFPS(int fps) {
         this.fps = fps;
     }
@@ -116,15 +135,15 @@ public class RacePanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.drawLine(20, 390, 20 + (OUTER_CIRCLE_DIAMETER - INNER_CIRCLE_DIAMETER) / 2, 390);
+        g.drawLine(20, 390, 20 + (parkour.OUTER_CIRCLE_DIAMETER - parkour.INNER_CIRCLE_DIAMETER) / 2, 390);
         drawParkour(g);
         drawCars(g);
     }
 
     private void drawParkour(Graphics g) {
         g.setColor(Color.BLACK);
-        g.drawOval(OUTER_CIRCLE_X, OUTER_CIRCLE_Y, OUTER_CIRCLE_DIAMETER, OUTER_CIRCLE_DIAMETER);
-        g.drawOval(INNER_CIRCLE_X, INNER_CIRCLE_Y, INNER_CIRCLE_DIAMETER, INNER_CIRCLE_DIAMETER);
+        g.drawOval(parkour.OUTER_CIRCLE_X, parkour.OUTER_CIRCLE_Y, parkour.OUTER_CIRCLE_DIAMETER, parkour.OUTER_CIRCLE_DIAMETER);
+        g.drawOval(parkour.INNER_CIRCLE_X, parkour.INNER_CIRCLE_Y, parkour.INNER_CIRCLE_DIAMETER, parkour.INNER_CIRCLE_DIAMETER);
     }
 
     private void drawCars(Graphics g) {
@@ -161,6 +180,19 @@ public class RacePanel extends JPanel {
                 }
             }
         }
+    }
+
+
+    public static class Parkour {
+        public final int OUTER_CIRCLE_X = 20;
+        public final int OUTER_CIRCLE_Y = 40;
+        public final int OUTER_CIRCLE_DIAMETER = 700;
+        public final int INNER_CIRCLE_X = 170;
+        public final int INNER_CIRCLE_Y = 190;
+        public final int INNER_CIRCLE_DIAMETER = 400;
+        public final int PARKOUR_CENTER_X = OUTER_CIRCLE_X + OUTER_CIRCLE_DIAMETER / 2;
+        public final int PARKOUR_CENTER_Y = OUTER_CIRCLE_Y + OUTER_CIRCLE_DIAMETER / 2;
+
     }
 
 }

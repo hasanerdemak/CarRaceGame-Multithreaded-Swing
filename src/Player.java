@@ -1,5 +1,6 @@
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.Random;
 
 public class Player implements KeyListener, PilotInterface {
     private int playerID;
@@ -47,7 +48,7 @@ public class Player implements KeyListener, PilotInterface {
     @Override
     public void run() {
         upKeyPressed = downKeyPressed = rightKeyPressed = leftKeyPressed = false;
-        while (!RacePanel.gameOver) {
+        while (!RacePanel.getInstance().isGameOver()) {
             handleMovement();
             try {
                 Thread.sleep(1000 / fps); // Adjust this value for player speed
@@ -109,33 +110,8 @@ public class Player implements KeyListener, PilotInterface {
     @Override
     public void setSleepTime(int sleepDuration) {
         car.disabled();
-        int centerX = RacePanel.OUTER_CIRCLE_X + RacePanel.OUTER_CIRCLE_DIAMETER / 2;
-        int centerY = RacePanel.OUTER_CIRCLE_Y + RacePanel.OUTER_CIRCLE_DIAMETER / 2;
-        int collisionX = car.getCarX();
-        int collisionY = car.getCarY();
 
-        // Define the distance from the collision point to the starting point
-        int distanceFromCollision = 50; // Adjust this value as desired
-
-        // Calculate the angle between the collision point and the center of the track
-        double angle = Math.atan2(collisionY - centerY, collisionX - centerX);
-
-        // Calculate the new position for the car
-        int startX = collisionX + (int) (distanceFromCollision * Math.cos(angle));
-        int startY = collisionY + (int) (distanceFromCollision * Math.sin(angle));
-
-        // Check if the new position is inside the inner circle
-        int innerCircleCenterX = RacePanel.INNER_CIRCLE_X + RacePanel.INNER_CIRCLE_DIAMETER / 2;
-        int innerCircleCenterY = RacePanel.INNER_CIRCLE_Y + RacePanel.INNER_CIRCLE_DIAMETER / 2;
-        int distanceSquaredToInnerCircle = (startX - innerCircleCenterX) * (startX - innerCircleCenterX)
-                + (startY - innerCircleCenterY) * (startY - innerCircleCenterY);
-        int innerCircleRadiusSquared = (RacePanel.INNER_CIRCLE_DIAMETER / 2) * (RacePanel.INNER_CIRCLE_DIAMETER / 2);
-
-        // Adjust the new position if it is inside the inner circle
-        if (distanceSquaredToInnerCircle < innerCircleRadiusSquared) {
-            startX = (int) (innerCircleCenterX + Math.cos(angle) * RacePanel.INNER_CIRCLE_DIAMETER / 2);
-            startY = (int) (innerCircleCenterY + Math.sin(angle) * RacePanel.INNER_CIRCLE_DIAMETER / 2);
-        }
+        var point = RaceUtils.getRandomPointWithSameAngle(car);
 
         try {
             Thread.sleep(sleepDuration);
@@ -145,8 +121,8 @@ public class Player implements KeyListener, PilotInterface {
         car.enabled();
 
         // Move the car to the new starting position
-        car.setCarX(startX);
-        car.setCarY(startY);
+        car.setCarX(point.x);
+        car.setCarY(point.y);
     }
 
 

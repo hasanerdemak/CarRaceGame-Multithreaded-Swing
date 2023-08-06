@@ -1,13 +1,15 @@
 import java.awt.*;
+import java.util.Random;
 
 public class RaceUtils {
 
     public static boolean isInOppositeDirection(int currentX, int currentY, int newX, int newY) {
         // Calculate the angle (in radians) between the current position and the new position
-        double angleCurrent = Math.atan2(currentY - RacePanel.OUTER_CIRCLE_Y - (double) RacePanel.OUTER_CIRCLE_DIAMETER / 2,
-                currentX - RacePanel.OUTER_CIRCLE_X - (double) RacePanel.OUTER_CIRCLE_DIAMETER / 2);
-        double angleNew = Math.atan2(newY - RacePanel.OUTER_CIRCLE_Y - (double) RacePanel.OUTER_CIRCLE_DIAMETER / 2,
-                newX - RacePanel.OUTER_CIRCLE_X - (double) RacePanel.OUTER_CIRCLE_DIAMETER / 2);
+        RacePanel.Parkour parkour = RacePanel.getInstance().getParkour();
+        double angleCurrent = Math.atan2(currentY - parkour.OUTER_CIRCLE_Y - (double) parkour.OUTER_CIRCLE_DIAMETER / 2,
+                currentX - parkour.OUTER_CIRCLE_X - (double) parkour.OUTER_CIRCLE_DIAMETER / 2);
+        double angleNew = Math.atan2(newY - parkour.OUTER_CIRCLE_Y - (double) parkour.OUTER_CIRCLE_DIAMETER / 2,
+                newX - parkour.OUTER_CIRCLE_X - (double) parkour.OUTER_CIRCLE_DIAMETER / 2);
 
         // Convert the angles to degrees (between 0 and 360)
         angleCurrent = Math.toDegrees(angleCurrent);
@@ -31,7 +33,7 @@ public class RaceUtils {
             return true;
         }
 
-        for (var tempCar : RacePanel.cars) {
+        for (var tempCar : RacePanel.getInstance().getCars()) {
             if (!car.equals(tempCar)) {
                 if (checkCollision(car, tempCar)) {
                     return true;
@@ -43,17 +45,24 @@ public class RaceUtils {
     }
 
     public static boolean isCarInsideParkour(Car car) {
-        int outerCircleCenterX = RacePanel.OUTER_CIRCLE_X + (RacePanel.OUTER_CIRCLE_DIAMETER / 2);
-        int outerCircleCenterY = RacePanel.OUTER_CIRCLE_Y + (RacePanel.OUTER_CIRCLE_DIAMETER / 2);
-        int outerCircleRadiusSquared = (RacePanel.OUTER_CIRCLE_DIAMETER / 2) * (RacePanel.OUTER_CIRCLE_DIAMETER / 2);
-        int innerCircleCenterX = RacePanel.INNER_CIRCLE_X + (RacePanel.INNER_CIRCLE_DIAMETER / 2);
-        int innerCircleCenterY = RacePanel.INNER_CIRCLE_Y + (RacePanel.INNER_CIRCLE_DIAMETER / 2);
-        int innerCircleRadiusSquared = (RacePanel.INNER_CIRCLE_DIAMETER / 2) * (RacePanel.INNER_CIRCLE_DIAMETER / 2);
-
         int carLeft = car.getCarX();
         int carRight = car.getCarX() + Car.SIZE;
         int carTop = car.getCarY();
         int carBottom = car.getCarY() + Car.SIZE;
+
+        // Check if all four corners of the car are inside the parkour
+        return isAllCornersInsideParkour(carLeft, carRight, carTop, carBottom);
+    }
+
+    private static boolean isAllCornersInsideParkour(int carLeft, int carRight, int carTop, int carBottom) {
+        var parkour = RacePanel.getInstance().getParkour();
+
+        int outerCircleCenterX = parkour.OUTER_CIRCLE_X + (parkour.OUTER_CIRCLE_DIAMETER / 2);
+        int outerCircleCenterY = parkour.OUTER_CIRCLE_Y + (parkour.OUTER_CIRCLE_DIAMETER / 2);
+        int outerCircleRadiusSquared = (parkour.OUTER_CIRCLE_DIAMETER / 2) * (parkour.OUTER_CIRCLE_DIAMETER / 2);
+        int innerCircleCenterX = parkour.INNER_CIRCLE_X + (parkour.INNER_CIRCLE_DIAMETER / 2);
+        int innerCircleCenterY = parkour.INNER_CIRCLE_Y + (parkour.INNER_CIRCLE_DIAMETER / 2);
+        int innerCircleRadiusSquared = (parkour.INNER_CIRCLE_DIAMETER / 2) * (parkour.INNER_CIRCLE_DIAMETER / 2);
 
         // Check if all four corners of the car are inside the parkour
         return isInsideCircle(carLeft, carTop, outerCircleCenterX, outerCircleCenterY, outerCircleRadiusSquared)
@@ -83,11 +92,38 @@ public class RaceUtils {
         return rect1.intersects(rect2);
     }
 
+    public static Point getRandomPointWithSameAngle(Car car) {
+        var parkour = RacePanel.getInstance().getParkour();
+
+        int centerX = parkour.OUTER_CIRCLE_X + parkour.OUTER_CIRCLE_DIAMETER / 2;
+        int centerY = parkour.OUTER_CIRCLE_Y + parkour.OUTER_CIRCLE_DIAMETER / 2;
+        int carX = car.getCarX();
+        int carY = car.getCarY();
+
+        // Define the distance from the collision point to the starting point
+        int distanceFromOriginalPos = new Random().nextInt(5, 50); // Adjust this value as desired
+
+        // Calculate the angle between the collision point and the center of the track
+        double angle = Math.atan2(carY - centerY, carX - centerX);
+
+        // Calculate the new position for the car
+        int newX = carX - (int) (distanceFromOriginalPos * Math.cos(angle));
+        int newY = carY - (int) (distanceFromOriginalPos * Math.sin(angle));
+        // todo fix this
+        if (!isAllCornersInsideParkour(newX, newX + Car.SIZE, newY, newY+ Car.SIZE)){
+            return getRandomPointWithSameAngle(car);
+        } else {
+            return new Point(newX, newY);
+        }
+    }
+
 
     public static boolean isCarPassedFinishLine(Car car) {
+        var parkour = RacePanel.getInstance().getParkour();
+
         int finishLineY = 390;
         int outerCircleLeft = 20;
-        int outerCircleRight = 20 + ((RacePanel.OUTER_CIRCLE_DIAMETER - RacePanel.INNER_CIRCLE_DIAMETER) / 2);
+        int outerCircleRight = 20 + ((parkour.OUTER_CIRCLE_DIAMETER - parkour.INNER_CIRCLE_DIAMETER) / 2);
 
         int carY = car.getCarY();
         int lastY = car.getLastY();

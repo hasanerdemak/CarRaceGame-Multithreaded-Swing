@@ -34,7 +34,7 @@ public class Bot implements PilotInterface {
 
     @Override
     public void run() {
-        while (!RacePanel.gameOver) {
+        while (!RacePanel.getInstance().isGameOver()) {
             handleMovement();
             try {
                 Thread.sleep(1000 / fps);

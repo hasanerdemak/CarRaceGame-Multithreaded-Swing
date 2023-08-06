@@ -13,7 +13,7 @@ public class CarRace extends JFrame {
         setLocationRelativeTo(null);
         setResizable(false);
 
-        racePanel = new RacePanel();
+        racePanel = RacePanel.getInstance();
         add(racePanel);
         pack();
 
