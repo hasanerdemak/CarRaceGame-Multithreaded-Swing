@@ -115,8 +115,9 @@ public class RacePanel extends JPanel {
         gameOver = false;
         for (int i = 0; i < pilots.size(); i++) {
             var car = pilots.get(i).getCar();
-            car.setCarX(25 + i * 20);
-            car.setCarY(385);
+            int x = 25 + i * 20;
+            int y = parkour.FINISH_LINE_Y- Car.SIZE/2;
+            car.reset(x, y);
         }
     }
 
@@ -135,7 +136,9 @@ public class RacePanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.drawLine(20, 390, 20 + (parkour.OUTER_CIRCLE_DIAMETER - parkour.INNER_CIRCLE_DIAMETER) / 2, 390);
+        int y = parkour.FINISH_LINE_Y;
+        int x = parkour.OUTER_CIRCLE_X;
+        g.drawLine(x, y, x + parkour.PARKOUR_WIDTH, y);
         drawParkour(g);
         drawCars(g);
     }
@@ -192,6 +195,9 @@ public class RacePanel extends JPanel {
         public final int INNER_CIRCLE_DIAMETER = 400;
         public final int PARKOUR_CENTER_X = OUTER_CIRCLE_X + OUTER_CIRCLE_DIAMETER / 2;
         public final int PARKOUR_CENTER_Y = OUTER_CIRCLE_Y + OUTER_CIRCLE_DIAMETER / 2;
+        public final int FINISH_LINE_Y = PARKOUR_CENTER_Y;
+        public final int PARKOUR_WIDTH = (OUTER_CIRCLE_DIAMETER - INNER_CIRCLE_DIAMETER) / 2;
+
 
     }
 

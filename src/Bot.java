@@ -75,18 +75,4 @@ public class Bot implements PilotInterface {
         car.moveCar(newDX, newDY);
     }
 
-    @Override
-    public void setSleepTime(int sleepDuration) {
-        car.disabled();
-        try {
-            Thread.sleep(sleepDuration);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        car.enabled();
-        int dx = car.getLastX() - car.getCarX();
-        int dy = car.getLastY() - car.getCarY();
-        car.moveCar(dx, dy);
-    }
-
 }

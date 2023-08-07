@@ -1,6 +1,5 @@
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.util.Random;
 
 public class Player implements KeyListener, PilotInterface {
     private int playerID;
@@ -36,13 +35,13 @@ public class Player implements KeyListener, PilotInterface {
         return car;
     }
 
+    public void setCar(Car car) {
+        this.car = car;
+    }
+
     @Override
     public void setFPS(int fps) {
         this.fps = fps;
-    }
-
-    public void setCar(Car car) {
-        this.car = car;
     }
 
     @Override
@@ -107,47 +106,5 @@ public class Player implements KeyListener, PilotInterface {
         car.moveCar(dx, dy);
     }
 
-    @Override
-    public void setSleepTime(int sleepDuration) {
-        car.disabled();
-
-        var point = RaceUtils.getRandomPointWithSameAngle(car);
-
-        try {
-            Thread.sleep(sleepDuration);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        car.enabled();
-
-        // Move the car to the new starting position
-        car.setCarX(point.x);
-        car.setCarY(point.y);
-    }
-
-
 
 }
-
-
-/*
-
-@Override
-    public void setSleepTime(int sleepDuration) {
-        car.disabled();
-        int startX = car.getLastX();
-        int startY = car.getLastY();
-
-        try {
-            Thread.sleep(sleepDuration);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        car.enabled();
-
-        // Move the car back to the starting position (empty point)
-        car.setCarX(startX);
-        car.setCarY(startY);
-    }
-
- */
