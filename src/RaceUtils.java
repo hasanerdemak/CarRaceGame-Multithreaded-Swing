@@ -108,13 +108,13 @@ public class RaceUtils {
     public static Point getRandomPointWithSameAngle(Car car) {
         var parkour = RacePanel.getInstance().getParkour();
 
-        int centerX = parkour.OUTER_CIRCLE_X + parkour.OUTER_CIRCLE_DIAMETER / 2;
-        int centerY = parkour.OUTER_CIRCLE_Y + parkour.OUTER_CIRCLE_DIAMETER / 2;
-        int carX = car.getCarX();
-        int carY = car.getCarY();
+        int parkourCenterX = parkour.OUTER_CIRCLE_X + parkour.OUTER_CIRCLE_DIAMETER / 2;
+        int parkourCenterY = parkour.OUTER_CIRCLE_Y + parkour.OUTER_CIRCLE_DIAMETER / 2;
+        int carCenterX = car.getCarX() + Car.SIZE/2;
+        int carCenterY = car.getCarY() + Car.SIZE/2;
 
         // Calculate the angle between the collision point and the center of the track
-        double angle = Math.atan2(carY - centerY, carX - centerX);
+        double angle = Math.atan2(carCenterY - parkourCenterY, carCenterX - parkourCenterX);
 
         int newX, newY;
         int coefficient = 1;
@@ -122,8 +122,8 @@ public class RaceUtils {
             // Define the distance from the collision point to the starting point
             int distanceFromOriginalPos = coefficient * random.nextInt(1, parkour.PARKOUR_WIDTH / 2);
             // Calculate the new position for the car
-            newX = carX + (int) (distanceFromOriginalPos * Math.cos(angle));
-            newY = carY + (int) (distanceFromOriginalPos * Math.sin(angle));
+            newX = carCenterX + (int) (distanceFromOriginalPos * Math.cos(angle))- Car.SIZE/2;
+            newY = carCenterY + (int) (distanceFromOriginalPos * Math.sin(angle))-Car.SIZE/2;
 
             coefficient *= -1;
         } while (!isAllCornersInsideParkour(newX, newX + Car.SIZE, newY, newY + Car.SIZE) ||
