@@ -1,9 +1,7 @@
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
-public class Player implements KeyListener, PilotInterface {
-    private int playerID;
-    private Car car;
+public class Player extends AbstractPilot implements KeyListener {
     private int upKey;
     private int downKey;
     private int leftKey;
@@ -12,11 +10,10 @@ public class Player implements KeyListener, PilotInterface {
     private boolean downKeyPressed;
     private boolean leftKeyPressed;
     private boolean rightKeyPressed;
-    private int fps = 5;
 
     public Player(Car car, int playerID, int upKey, int downKey, int leftKey, int rightKey) {
-        this.car = car;
-        this.playerID = playerID;
+        super(playerID, car);
+
         this.upKey = upKey;
         this.downKey = downKey;
         this.leftKey = leftKey;
@@ -26,31 +23,12 @@ public class Player implements KeyListener, PilotInterface {
     }
 
     @Override
-    public int getID() {
-        return playerID;
-    }
-
-    @Override
-    public Car getCar() {
-        return car;
-    }
-
-    public void setCar(Car car) {
-        this.car = car;
-    }
-
-    @Override
-    public void setFPS(int fps) {
-        this.fps = fps;
-    }
-
-    @Override
     public void run() {
         upKeyPressed = downKeyPressed = rightKeyPressed = leftKeyPressed = false;
         while (!RacePanel.getInstance().isGameOver()) {
             handleMovement();
             try {
-                Thread.sleep(1000 / fps); // Adjust this value for player speed
+                Thread.sleep(1000 / getFps());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -91,6 +69,7 @@ public class Player implements KeyListener, PilotInterface {
 
     @Override
     public void handleMovement() {
+        var car = getCar();
         if (RaceUtils.checkCollisionsForCar(car)) {
             setSleepTime(500);
         }

@@ -7,7 +7,7 @@ public class Car {
     private static final int BLINK_INTERVAL_DECREMENT = 10;
     private static final int BLINK_INTERVAL_MINIMUM = 5;
     private final Color color;
-    private final Color disabledColor; // New variable to store the disabled color
+    private final Color disabledColor;
     private final Timer blinkingTimer;
     private int carID;
     private int carX, carY;
@@ -23,7 +23,7 @@ public class Car {
         this.carY = this.lastY = carY;
         this.speed = speed;
         this.color = color;
-        this.disabledColor = new Color(color.getRed() / 2, color.getGreen() / 2, color.getBlue() / 2); // Initialize the disabled color
+        this.disabledColor = new Color(color.getRed() / 2, color.getGreen() / 2, color.getBlue() / 2);
 
         blinkingTimer = new Timer(BLINK_INTERVAL_INITIAL, e -> toggleBlinking());
     }
@@ -118,7 +118,7 @@ public class Car {
     }
 
     public void moveCar(int dx, int dy) {
-        if (!RaceUtils.checkCheat(this, dy)) {
+        if (!disabled && !RaceUtils.checkCheat(this, dy)) {
             if (dx != 0) lastX = carX;
             if (dy != 0) lastY = carY;
             carX += dx;
@@ -127,7 +127,7 @@ public class Car {
     }
 
     public void draw(Graphics g) {
-        if (!isBlinking) {
+        if (!isBlinking || RacePanel.getInstance().isGameOver()) {
             Color currentColor = disabled ? disabledColor : color;
             g.setColor(currentColor);
             g.fillRect(carX, carY, SIZE, SIZE);

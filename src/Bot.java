@@ -1,35 +1,12 @@
 import java.util.Random;
 
-public class Bot implements PilotInterface {
+public class Bot extends AbstractPilot {
     Random random = new Random();
-    private int botID;
-    private Car car;
-    private int fps = 5;
 
     public Bot(Car car, int botID) {
-        this.car = car;
-        this.botID = botID;
+        super(botID, car);
 
         car.setLabel("Bot " + botID);
-    }
-
-    @Override
-    public int getID() {
-        return botID;
-    }
-
-    @Override
-    public Car getCar() {
-        return car;
-    }
-
-    @Override
-    public void setFPS(int fps) {
-        this.fps = fps;
-    }
-
-    public void setCar(Car car) {
-        this.car = car;
     }
 
     @Override
@@ -37,7 +14,7 @@ public class Bot implements PilotInterface {
         while (!RacePanel.getInstance().isGameOver()) {
             handleMovement();
             try {
-                Thread.sleep(1000 / fps);
+                Thread.sleep(1000 / getFps());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -46,6 +23,7 @@ public class Bot implements PilotInterface {
 
     @Override
     public void handleMovement() {
+        var car = getCar();
         if (RaceUtils.checkCollisionsForCar(car)) {
             setSleepTime(500);
         }

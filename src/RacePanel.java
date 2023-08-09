@@ -168,7 +168,6 @@ public class RacePanel extends JPanel {
                     //JOptionPane.showMessageDialog(this, message, "Oyun Bitti", JOptionPane.INFORMATION_MESSAGE);
                     String[] options = {"Yeniden Başla", "Oyundan Çık"};
 
-                    // OptionPane'ı oluştur ve kullanıcının seçtiği düğmenin indeksini al
                     int choice = JOptionPane.showOptionDialog(null, message, "Oyun Bitti", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
 
                     if (choice == JOptionPane.YES_OPTION) { // Restart
