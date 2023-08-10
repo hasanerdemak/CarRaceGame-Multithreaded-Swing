@@ -8,10 +8,8 @@ public class RaceUtils {
     // Returns true if the new position is in the opposite direction of clockwise movement
     public static boolean isInOppositeDirection(int currentX, int currentY, int newX, int newY) {
         var parkour = RacePanel.getInstance().getParkour();
-        double angleCurrent = Math.atan2(currentY - parkour.OUTER_CIRCLE_Y - (double) parkour.OUTER_CIRCLE_DIAMETER / 2,
-                currentX - parkour.OUTER_CIRCLE_X - (double) parkour.OUTER_CIRCLE_DIAMETER / 2);
-        double angleNew = Math.atan2(newY - parkour.OUTER_CIRCLE_Y - (double) parkour.OUTER_CIRCLE_DIAMETER / 2,
-                newX - parkour.OUTER_CIRCLE_X - (double) parkour.OUTER_CIRCLE_DIAMETER / 2);
+        double angleCurrent = Math.atan2(currentY - parkour.OUTER_CIRCLE_Y - (double) parkour.OUTER_CIRCLE_DIAMETER / 2, currentX - parkour.OUTER_CIRCLE_X - (double) parkour.OUTER_CIRCLE_DIAMETER / 2);
+        double angleNew = Math.atan2(newY - parkour.OUTER_CIRCLE_Y - (double) parkour.OUTER_CIRCLE_DIAMETER / 2, newX - parkour.OUTER_CIRCLE_X - (double) parkour.OUTER_CIRCLE_DIAMETER / 2);
 
         angleCurrent = Math.toDegrees(angleCurrent);
         angleNew = Math.toDegrees(angleNew);
@@ -56,7 +54,7 @@ public class RaceUtils {
         return true;
     }
 
-    public static boolean isCarInsideParkour(Car car) {
+    private static boolean isCarInsideParkour(Car car) {
         int carLeft = car.getCarX();
         int carRight = car.getCarX() + Car.SIZE;
         int carTop = car.getCarY();
@@ -74,14 +72,7 @@ public class RaceUtils {
         int outerCircleRadiusSquared = (parkour.OUTER_CIRCLE_DIAMETER / 2) * (parkour.OUTER_CIRCLE_DIAMETER / 2);
         int innerCircleRadiusSquared = (parkour.INNER_CIRCLE_DIAMETER / 2) * (parkour.INNER_CIRCLE_DIAMETER / 2);
 
-        return isInsideCircle(carLeft, carTop, parkourCenterX, parkourCenterY, outerCircleRadiusSquared)
-                && isOutsideCircle(carLeft, carTop, parkourCenterX, parkourCenterY, innerCircleRadiusSquared)
-                && isInsideCircle(carRight, carTop, parkourCenterX, parkourCenterY, outerCircleRadiusSquared)
-                && isOutsideCircle(carRight, carTop, parkourCenterX, parkourCenterY, innerCircleRadiusSquared)
-                && isInsideCircle(carLeft, carBottom, parkourCenterX, parkourCenterY, outerCircleRadiusSquared)
-                && isOutsideCircle(carLeft, carBottom, parkourCenterX, parkourCenterY, innerCircleRadiusSquared)
-                && isInsideCircle(carRight, carBottom, parkourCenterX, parkourCenterY, outerCircleRadiusSquared)
-                && isOutsideCircle(carRight, carBottom, parkourCenterX, parkourCenterY, innerCircleRadiusSquared);
+        return isInsideCircle(carLeft, carTop, parkourCenterX, parkourCenterY, outerCircleRadiusSquared) && isOutsideCircle(carLeft, carTop, parkourCenterX, parkourCenterY, innerCircleRadiusSquared) && isInsideCircle(carRight, carTop, parkourCenterX, parkourCenterY, outerCircleRadiusSquared) && isOutsideCircle(carRight, carTop, parkourCenterX, parkourCenterY, innerCircleRadiusSquared) && isInsideCircle(carLeft, carBottom, parkourCenterX, parkourCenterY, outerCircleRadiusSquared) && isOutsideCircle(carLeft, carBottom, parkourCenterX, parkourCenterY, innerCircleRadiusSquared) && isInsideCircle(carRight, carBottom, parkourCenterX, parkourCenterY, outerCircleRadiusSquared) && isOutsideCircle(carRight, carBottom, parkourCenterX, parkourCenterY, innerCircleRadiusSquared);
     }
 
     // Returns true if x and y coordinates are inside the specified circle
@@ -97,7 +88,7 @@ public class RaceUtils {
     }
 
 
-    public static boolean checkCollision(Car car1, Car car2) {
+    private static boolean checkCollision(Car car1, Car car2) {
         Rectangle rect1 = car1.getBounds();
         Rectangle rect2 = car2.getBounds();
         return rect1.intersects(rect2);
@@ -123,12 +114,10 @@ public class RaceUtils {
             newY = carCenterY + (int) (distanceFromOriginalPos * Math.sin(angle)) - Car.SIZE / 2;
 
             coefficient *= -1;
-        } while (!isAllCornersInsideParkour(newX, newX + Car.SIZE, newY, newY + Car.SIZE) ||
-                !isEmptyPlace(car, newX, newY));
+        } while (!isAllCornersInsideParkour(newX, newX + Car.SIZE, newY, newY + Car.SIZE) || !isEmptyPlace(car, newX, newY));
 
         return new Point(newX, newY);
     }
-
 
     public static boolean isCarPassedFinishLine(Car car) {
         var parkour = RacePanel.getInstance().getParkour();

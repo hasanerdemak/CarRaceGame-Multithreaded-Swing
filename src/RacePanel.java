@@ -5,12 +5,12 @@ import java.util.ArrayList;
 
 public class RacePanel extends JPanel {
     private static RacePanel instance;
-    private Parkour parkour = new Parkour();
-    private ArrayList<Car> cars = new ArrayList<>();
-    private ArrayList<PilotInterface> pilots = new ArrayList<>();
-    private boolean gameOver = false;
     private final int WIDTH = 800;
     private final int HEIGHT = 800;
+    private Parkour parkour = new Parkour();
+    private ArrayList<Car> cars = new ArrayList<>();
+    private ArrayList<AbstractPilot> pilots = new ArrayList<>();
+    private boolean gameOver = false;
     private Player player1;
     private Player player2;
     private Bot[] bots;
@@ -80,7 +80,7 @@ public class RacePanel extends JPanel {
         return cars;
     }
 
-    public ArrayList<PilotInterface> getPilots() {
+    public ArrayList<AbstractPilot> getPilots() {
         return pilots;
     }
 
@@ -98,14 +98,17 @@ public class RacePanel extends JPanel {
 
     public void startGame() {
         startTime = System.currentTimeMillis();
-
-        for (var pilot : pilots) {
-            pilot.setFPS(fps);
-            var newThread = new Thread(pilot);
-            newThread.start();
-        }
-
         paintRaceTimer.setDelay(1000 / fps);
+
+        Thread[] threads = new Thread[pilots.size()];
+        for (int i = 0; i < threads.length; i++) {
+            var pilot = pilots.get(i);
+            pilot.setFPS(fps);
+            threads[i] = new Thread(pilot);
+        }
+        for (var thread : threads) {
+            thread.start();
+        }
 
         stopwatchTimer.start();
         paintRaceTimer.start();
@@ -116,7 +119,7 @@ public class RacePanel extends JPanel {
         for (int i = 0; i < pilots.size(); i++) {
             var car = pilots.get(i).getCar();
             int x = 25 + i * 20;
-            int y = parkour.FINISH_LINE_Y- Car.SIZE/2;
+            int y = parkour.FINISH_LINE_Y - Car.SIZE / 2;
             car.reset(x, y);
         }
     }
@@ -164,9 +167,8 @@ public class RacePanel extends JPanel {
                     stopwatchTimer.stop();
                     paintRaceTimer.stop();
                     String pilotType = (pilot instanceof Player) ? "Oyuncu" : "Bot";
-                    String message = pilot.getID() + ". " + pilotType + " Kazandı! Süresi " + timerLabel.getText();
-                    //JOptionPane.showMessageDialog(this, message, "Oyun Bitti", JOptionPane.INFORMATION_MESSAGE);
-                    String[] options = {"Yeniden Başla", "Oyundan Çık"};
+                    String message = pilot.getID() + ". " + pilotType + " Kazandi! Suresi " + timerLabel.getText();
+                    String[] options = {"Yeniden Basla", "Oyundan Cik"};
 
                     int choice = JOptionPane.showOptionDialog(null, message, "Oyun Bitti", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
 
@@ -184,7 +186,6 @@ public class RacePanel extends JPanel {
         }
     }
 
-
     public static class Parkour {
         public final int OUTER_CIRCLE_X = 20;
         public final int OUTER_CIRCLE_Y = 40;
@@ -196,7 +197,6 @@ public class RacePanel extends JPanel {
         public final int PARKOUR_CENTER_Y = OUTER_CIRCLE_Y + OUTER_CIRCLE_DIAMETER / 2;
         public final int FINISH_LINE_Y = PARKOUR_CENTER_Y;
         public final int PARKOUR_WIDTH = (OUTER_CIRCLE_DIAMETER - INNER_CIRCLE_DIAMETER) / 2;
-
 
     }
 

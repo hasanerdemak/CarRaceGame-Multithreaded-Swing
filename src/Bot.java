@@ -10,18 +10,6 @@ public class Bot extends AbstractPilot {
     }
 
     @Override
-    public void run() {
-        while (!RacePanel.getInstance().isGameOver()) {
-            handleMovement();
-            try {
-                Thread.sleep(1000 / getFps());
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @Override
     public void handleMovement() {
         var car = getCar();
         if (RaceUtils.checkCollisionsForCar(car)) {

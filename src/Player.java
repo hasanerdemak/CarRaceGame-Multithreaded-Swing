@@ -25,14 +25,7 @@ public class Player extends AbstractPilot implements KeyListener {
     @Override
     public void run() {
         upKeyPressed = downKeyPressed = rightKeyPressed = leftKeyPressed = false;
-        while (!RacePanel.getInstance().isGameOver()) {
-            handleMovement();
-            try {
-                Thread.sleep(1000 / getFps());
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        super.run();
     }
 
     @Override

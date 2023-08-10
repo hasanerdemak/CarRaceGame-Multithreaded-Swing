@@ -1,4 +1,4 @@
-public abstract class AbstractPilot implements PilotInterface {
+public abstract class AbstractPilot implements Runnable {
     private int id;
     private Car car;
     private int fps = 5;
@@ -8,12 +8,10 @@ public abstract class AbstractPilot implements PilotInterface {
         this.car = car;
     }
 
-    @Override
     public int getID() {
         return id;
     }
 
-    @Override
     public Car getCar() {
         return car;
     }
@@ -22,7 +20,6 @@ public abstract class AbstractPilot implements PilotInterface {
         this.car = car;
     }
 
-    @Override
     public void setFPS(int fps) {
         this.fps = fps;
     }
@@ -32,6 +29,19 @@ public abstract class AbstractPilot implements PilotInterface {
     }
 
     @Override
+    public void run() {
+        while (!RacePanel.getInstance().isGameOver()) {
+            handleMovement();
+            try {
+                Thread.sleep(1000 / getFps());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public abstract void handleMovement();
+
     public void setSleepTime(int sleepDuration) {
         var car = getCar();
         car.disabled();
