@@ -4,6 +4,7 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 
 public class RacePanel extends JPanel {
+
     private static RacePanel instance;
     private final int WIDTH = 800;
     private final int HEIGHT = 800;
@@ -11,6 +12,9 @@ public class RacePanel extends JPanel {
     private ArrayList<Car> cars = new ArrayList<>();
     private ArrayList<AbstractPilot> pilots = new ArrayList<>();
     private boolean gameOver = false;
+    private Difficulty difficulty = Difficulty.MEDIUM;
+    private int playerCount = 2;
+    private int botCount = 5;
     private Player player1;
     private Player player2;
     private Bot[] bots;
@@ -25,27 +29,173 @@ public class RacePanel extends JPanel {
         setLayout(new FlowLayout(FlowLayout.LEFT));
         setFocusable(true);
 
-        var redCar = new Car(1, 25, 385, 2, Color.RED);
-        var greenCar = new Car(2, 45, 385, 2, Color.GREEN);
-        cars.add(redCar);
-        cars.add(greenCar);
-        player1 = new Player(redCar, 1, 'W', 'S', 'A', 'D');
-        player2 = new Player(greenCar, 2, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT);
-        pilots.add(player1);
-        pilots.add(player2);
-        addKeyListener(player1);
-        addKeyListener(player2);
+        initializeTimers();
+    }
 
-        bots = new Bot[5];
+    public static RacePanel getInstance() {
+        if (instance == null) {
+            instance = new RacePanel();
+        }
+        return instance;
+    }
+
+    public static Difficulty showDifficultyChooser(Difficulty initialDifficulty) {
+        JPanel panel = new JPanel();
+        ButtonGroup buttonGroup = new ButtonGroup();
+        JRadioButton easyRadioButton = new JRadioButton("Easy");
+        JRadioButton mediumRadioButton = new JRadioButton("Medium");
+        JRadioButton hardRadioButton = new JRadioButton("Hard");
+
+        buttonGroup.add(easyRadioButton);
+        buttonGroup.add(mediumRadioButton);
+        buttonGroup.add(hardRadioButton);
+
+        panel.add(easyRadioButton);
+        panel.add(mediumRadioButton);
+        panel.add(hardRadioButton);
+
+        // Set the initial selected button
+        switch (initialDifficulty) {
+            case EASY -> easyRadioButton.setSelected(true);
+            case MEDIUM -> mediumRadioButton.setSelected(true);
+            case HARD -> hardRadioButton.setSelected(true);
+        }
+
+        int choice = JOptionPane.showConfirmDialog(
+                null,
+                panel,
+                "Select Difficulty",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
+        );
+
+        if (choice == JOptionPane.OK_OPTION) {
+            if (easyRadioButton.isSelected()) {
+                return Difficulty.EASY;
+            } else if (mediumRadioButton.isSelected()) {
+                return Difficulty.MEDIUM;
+            } else if (hardRadioButton.isSelected()) {
+                return Difficulty.HARD;
+            }
+        }
+
+        return null;
+    }
+
+    public ArrayList<Car> getCars() {
+        return cars;
+    }
+
+    public ArrayList<AbstractPilot> getPilots() {
+        return pilots;
+    }
+
+    public boolean isGameOver() {
+        return gameOver;
+    }
+
+    public Parkour getParkour() {
+        return parkour;
+    }
+
+    public Bot[] getBots() {
+        return bots;
+    }
+
+    public Player getPlayer1() {
+        return player1;
+    }
+
+    public Player getPlayer2() {
+        return player2;
+    }
+
+    public void setFPS(int fps) {
+        this.fps = fps;
+    }
+
+    public void startGame() {
+        getBotCount();
+        initializePlayers(playerCount);
+        initializeBots(botCount);
+
+        do {
+            difficulty = showDifficultyChooser(Difficulty.MEDIUM);
+        } while (difficulty == null);
+
+        for (var bot : bots) {
+            bot.getCar().setSpeed(difficulty.ordinal() + 1);
+        }
+
+        startTime = System.currentTimeMillis();
+        paintRaceTimer.setDelay(1000 / fps);
+
+        Thread[] threads = new Thread[pilots.size()];
+        for (int i = 0; i < threads.length; i++) {
+            var pilot = pilots.get(i);
+            pilot.setFPS(fps);
+            threads[i] = new Thread(pilot);
+        }
+        for (var thread : threads) {
+            thread.start();
+        }
+
+        stopwatchTimer.start();
+        paintRaceTimer.start();
+    }
+
+    private void resetGame() {
+        cars.clear();
+        pilots.clear();
+        gameOver = false;
+        difficulty = Difficulty.MEDIUM;
+        playerCount = 2;
+        botCount = 5;
+        removeKeyListener(player1);
+        removeKeyListener(player2);
+        player1 = null;
+        player2 = null;
+    }
+
+    private void initializePlayers(int count) {
+        if (count == 1) {
+            initializePlayer1();
+        } else if (count == 2) {
+            initializePlayer1();
+            initializePlayer2();
+        }
+    }
+
+    private void initializePlayer1() {
+        var redCar = new Car(1, 25, 385, 1, Color.RED);
+        player1 = new Player(redCar, 1, 'W', 'S', 'A', 'D');
+        cars.add(redCar);
+        pilots.add(player1);
+        addKeyListener(player1);
+    }
+
+    private void initializePlayer2() {
+        var greenCar = new Car(2, 45, 385, 1, Color.GREEN);
+        player2 = new Player(greenCar, 2, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT);
+        cars.add(greenCar);
+        pilots.add(player2);
+        addKeyListener(player2);
+    }
+
+
+    private void initializeBots(int count) {
+        bots = new Bot[count];
         for (int i = 0; i < bots.length; i++) {
             int startX = 45 + (i + 1) * 20;
             int startY = 385;
-            var newCar = new Car(3 + i, startX, startY, 1, Color.BLACK);
+            var newCar = new Car(3 + i, startX, startY, difficulty.ordinal() + 1, Color.BLACK);
             bots[i] = new Bot(newCar, i + 1);
             cars.add(newCar);
             pilots.add(bots[i]);
         }
+    }
 
+    private void initializeTimers() {
         timerLabel = new JLabel("00:00:00");
         timerLabel.setBounds(10, 10, 100, 30);
         add(timerLabel, FlowLayout.LEFT);
@@ -66,74 +216,6 @@ public class RacePanel extends JPanel {
             repaint();
             checkWinner();
         });
-
-    }
-
-    public static RacePanel getInstance() {
-        if (instance == null) {
-            instance = new RacePanel();
-        }
-        return instance;
-    }
-
-    public ArrayList<Car> getCars() {
-        return cars;
-    }
-
-    public ArrayList<AbstractPilot> getPilots() {
-        return pilots;
-    }
-
-    public boolean isGameOver() {
-        return gameOver;
-    }
-
-    public Parkour getParkour() {
-        return parkour;
-    }
-
-    public void setFPS(int fps) {
-        this.fps = fps;
-    }
-
-    public void startGame() {
-        startTime = System.currentTimeMillis();
-        paintRaceTimer.setDelay(1000 / fps);
-
-        Thread[] threads = new Thread[pilots.size()];
-        for (int i = 0; i < threads.length; i++) {
-            var pilot = pilots.get(i);
-            pilot.setFPS(fps);
-            threads[i] = new Thread(pilot);
-        }
-        for (var thread : threads) {
-            thread.start();
-        }
-
-        stopwatchTimer.start();
-        paintRaceTimer.start();
-    }
-
-    private void resetGame() {
-        gameOver = false;
-        for (int i = 0; i < pilots.size(); i++) {
-            var car = pilots.get(i).getCar();
-            int x = 25 + i * 20;
-            int y = parkour.FINISH_LINE_Y - Car.SIZE / 2;
-            car.reset(x, y);
-        }
-    }
-
-    public Bot[] getBots() {
-        return bots;
-    }
-
-    public Player getPlayer1() {
-        return player1;
-    }
-
-    public Player getPlayer2() {
-        return player2;
     }
 
     @Override
@@ -158,7 +240,7 @@ public class RacePanel extends JPanel {
         }
     }
 
-    public synchronized void checkWinner() {
+    public void checkWinner() {
         if (!gameOver) {
             for (var pilot : pilots) {
                 var car = pilot.getCar();
@@ -166,24 +248,104 @@ public class RacePanel extends JPanel {
                     gameOver = true;
                     stopwatchTimer.stop();
                     paintRaceTimer.stop();
-                    String pilotType = (pilot instanceof Player) ? "Oyuncu" : "Bot";
-                    String message = pilot.getID() + ". " + pilotType + " Kazandi! Suresi " + timerLabel.getText();
-                    String[] options = {"Yeniden Basla", "Oyundan Cik"};
 
-                    int choice = JOptionPane.showOptionDialog(null, message, "Oyun Bitti", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
+                    int choice = showGameOverDialog(pilot);
 
                     if (choice == JOptionPane.YES_OPTION) { // Restart
                         resetGame();
                         startGame();
-                    } else if (choice == JOptionPane.NO_OPTION) {
-                        System.exit(0);
-                    } else if (choice == JOptionPane.CLOSED_OPTION) {
+                    } else if (choice == JOptionPane.NO_OPTION || choice == JOptionPane.CLOSED_OPTION) {
                         System.exit(0);
                     }
                     break;
                 }
             }
         }
+    }
+
+    public void getBotCount() {
+        JSlider botCountSlider = new JSlider(JSlider.HORIZONTAL, 0, 5, botCount);
+        botCountSlider.setMajorTickSpacing(1);
+        botCountSlider.setPaintTicks(true);
+        botCountSlider.setPaintLabels(true);
+
+        JSlider playerCountSlider = new JSlider(JSlider.HORIZONTAL, 0, 2, playerCount);
+        playerCountSlider.setMajorTickSpacing(1);
+        playerCountSlider.setPaintTicks(true);
+        playerCountSlider.setPaintLabels(true);
+
+        String[] options = {"OK"};
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(2, 2));
+        panel.add(new JLabel("Select Player Count:"));
+        panel.add(playerCountSlider);
+        panel.add(new JLabel("Select Bot Count:"));
+        panel.add(botCountSlider);
+
+        JOptionPane.showOptionDialog(
+                null,
+                panel,
+                "Player&Bot Count Selection",
+                JOptionPane.OK_OPTION,
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                options,
+                options[0]
+        );
+
+        playerCount = playerCountSlider.getValue();
+        botCount = botCountSlider.getValue();
+    }
+
+    /*public void getBotCount() {
+        JSlider slider = new JSlider(JSlider.HORIZONTAL, 0, 5, botCount);
+        slider.setMajorTickSpacing(1);
+        slider.setPaintTicks(true);
+        slider.setPaintLabels(true);
+
+        String[] options = {"OK"};
+        JPanel panel = new JPanel();
+        panel.add(new JLabel("Select Bot Count:"));
+        panel.add(slider);
+
+        JOptionPane.showOptionDialog(
+                null,
+                panel,
+                "Bot Count Selection",
+                JOptionPane.OK_OPTION,
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                options,
+                options[0]
+        );
+
+        botCount = slider.getValue();
+    }*/
+
+    public int showGameOverDialog(AbstractPilot pilot) {
+        String pilotType = (pilot instanceof Player) ? "Player" : "Bot";
+        String message = pilotType + " " + pilot.getID() + " won. Finishing time is " + timerLabel.getText();
+
+        int choice;
+        do {
+            choice = JOptionPane.showOptionDialog(
+                    null,
+                    message,
+                    "Game Over",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.INFORMATION_MESSAGE,
+                    null,
+                    new String[]{"Restart", "Quit Game"},
+                    "Restart"
+            );
+        } while (choice == JOptionPane.CLOSED_OPTION);
+        return choice;
+    }
+
+    private enum Difficulty {
+        EASY,
+        MEDIUM,
+        HARD
     }
 
     public static class Parkour {
