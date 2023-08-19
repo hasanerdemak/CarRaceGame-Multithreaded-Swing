@@ -1,9 +1,11 @@
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Random;
 
 public class RaceUtils {
 
     private static final Random random = new Random();
+    static boolean pass = false;
 
     // Returns true if the new position is in the opposite direction of clockwise movement
     public static boolean isInOppositeDirection(int currentX, int currentY, int newX, int newY) {
@@ -87,7 +89,6 @@ public class RaceUtils {
         return distanceSquared > radiusSquared;
     }
 
-
     private static boolean checkCollision(Car car1, Car car2) {
         Rectangle rect1 = car1.getBounds();
         Rectangle rect2 = car2.getBounds();
@@ -98,12 +99,10 @@ public class RaceUtils {
     public static Point getRandomPointWithSameAngle(Car car) {
         var parkour = RacePanel.getInstance().getParkour();
 
-        int parkourCenterX = parkour.OUTER_CIRCLE_X + parkour.OUTER_CIRCLE_DIAMETER / 2;
-        int parkourCenterY = parkour.OUTER_CIRCLE_Y + parkour.OUTER_CIRCLE_DIAMETER / 2;
         int carCenterX = car.getCarX() + Car.SIZE / 2;
         int carCenterY = car.getCarY() + Car.SIZE / 2;
 
-        double angle = Math.atan2(carCenterY - parkourCenterY, carCenterX - parkourCenterX);
+        double angle = calculateAngleToCenter(car);
 
         int newX, newY;
         int coefficient = 1;
@@ -119,11 +118,21 @@ public class RaceUtils {
         return new Point(newX, newY);
     }
 
-    public static boolean isCarPassedFinishLine(Car car) {
+    public static boolean isPilotPassedFinishLine(AbstractPilot pilot) {
+        var car = pilot.getCar();
         var parkour = RacePanel.getInstance().getParkour();
         var finishLineRect = new Rectangle(parkour.OUTER_CIRCLE_X, parkour.FINISH_LINE_Y, parkour.PARKOUR_WIDTH, 1);
 
-        return car.getBounds().intersects(finishLineRect) && car.getLastY() + car.getSpeed() >= parkour.FINISH_LINE_Y;
+        if (car.getBounds().intersects(finishLineRect) && car.getLastY() + Car.SIZE / 2 + 1 + car.getSpeed() < parkour.FINISH_LINE_Y) {
+            if (!pilot.hasCompletedTour()) {
+                pilot.setHasCompletedTour(true);
+                return true;
+            }
+        } else {
+            pilot.setHasCompletedTour(false);
+        }
+
+        return false;
     }
 
     public static boolean checkCheat(Car car, int dy) {
@@ -131,5 +140,97 @@ public class RaceUtils {
         var finishLineRect = new Rectangle(parkour.OUTER_CIRCLE_X, parkour.FINISH_LINE_Y, parkour.PARKOUR_WIDTH, 1);
 
         return car.getBounds().intersects(finishLineRect) && dy > 0;
+    }
+
+    private static double calculateAngleToCenter(Car car) {
+        var parkour = RacePanel.getInstance().getParkour();
+
+        int parkourCenterX = parkour.OUTER_CIRCLE_X + parkour.OUTER_CIRCLE_DIAMETER / 2;
+        int parkourCenterY = parkour.OUTER_CIRCLE_Y + parkour.OUTER_CIRCLE_DIAMETER / 2;
+        int carCenterX = car.getCarX() + Car.SIZE / 2;
+        int carCenterY = car.getCarY() + Car.SIZE / 2;
+
+        double angle = Math.atan2(carCenterY - parkourCenterY, carCenterX - parkourCenterX);
+        if (angle == Math.PI) {
+            if (isInOppositeDirection(car.getLastX(), car.getLastY(), car.getCarX(), car.getCarY()) ||
+                    ((car.getLastX() == car.getCarX()) && (car.getLastY() == car.getCarY()))) {
+                angle = -Math.PI;
+            }
+        }
+
+        return angle;
+    }
+
+    public static void updateRankingLabel() {
+        // Arabaları tamamladıkları tur sayısına göre sıralayın
+        var racePanel = RacePanel.getInstance();
+        ArrayList<AbstractPilot> pilots = racePanel.getPilots();
+
+        pilots.sort((pilot1, pilot2) -> {
+            int compareByTours = Integer.compare(pilot2.getCompletedTours(), pilot1.getCompletedTours());
+            if (compareByTours == 0) {
+                int compareByPosition = compareByPosition(pilot1.getCar(), pilot2.getCar());
+                return compareByPosition != 0 ? compareByPosition : Integer.compare(pilot1.getID(), pilot2.getID());
+            } else {
+                return compareByTours;
+            }
+        });
+
+        if (pilots.get(0).getCar().getLabel().equals("Player 1")) {
+            double angle1 = calculateAngleToCenter(pilots.get(0).getCar());
+            double angle2 = calculateAngleToCenter(pilots.get(1).getCar());
+            pass = true;
+        }
+
+        if (pilots.get(0).getCar().getLabel().equals("Bot 1") && pilots.get(1).getCar().getLabel().equals("Player 1") && pass) {
+            System.out.println("Botttt");
+        }
+
+        StringBuilder rankingText = new StringBuilder("<html><div style='text-align: right;'>Sıralama:<br>");
+        for (int i = 0; i < pilots.size(); i++) {
+            AbstractPilot pilot = pilots.get(i);
+            rankingText.append(i + 1).append(": ").append(pilot.getCar().getLabel()).append(" (").append(pilot.getCompletedTours()).append("/").append(racePanel.getTotalTourCount()).append(")");
+            if (i < pilots.size() - 1) {
+                rankingText.append("<br>");
+            }
+        }
+        rankingText.append("</div></html>");
+
+        racePanel.getRankingLabel().setText(rankingText.toString());
+    }
+
+
+    private static int compareByPosition(Car car1, Car car2) {
+        double angle1 = calculateAngleToCenter(car1);
+        double angle2 = calculateAngleToCenter(car2);
+
+        // Açıları karşılaştırırken pozitif veya negatif sonuçlara göre sıralama yapabilirsiniz
+        // Eğer saat yönünün tersine hareket ediliyorsa, tersine çevirebilirsiniz.
+        int result = Double.compare(angle2, angle1);
+
+        // Eğer iki açı eşitse, başka bir ölçüte göre karşılaştırma yapabilirsiniz.
+        if (result == 0) {
+            // Örneğin, arabaların mesafelerini karşılaştırmak için başka bir metot kullanabilirsiniz.
+            double distance1 = calculateDistanceToCenter(car1);
+            double distance2 = calculateDistanceToCenter(car2);
+            result = Double.compare(distance1, distance2);
+        }
+
+        return result;
+    }
+
+    private static double calculateDistanceToCenter(Car car) {
+        var parkour = RacePanel.getInstance().getParkour();
+
+        int parkourCenterX = parkour.OUTER_CIRCLE_X + parkour.OUTER_CIRCLE_DIAMETER / 2;
+        int parkourCenterY = parkour.OUTER_CIRCLE_Y + parkour.OUTER_CIRCLE_DIAMETER / 2;
+
+        int carCenterX = car.getCarX() + Car.SIZE / 2;
+        int carCenterY = car.getCarY() + Car.SIZE / 2;
+
+        // Euclidean mesafesini hesapla
+        double distance = Math.sqrt(Math.pow(carCenterX - parkourCenterX, 2) + Math.pow(carCenterY - parkourCenterY, 2));
+
+        return distance;
     }
 }

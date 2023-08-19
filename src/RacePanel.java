@@ -22,12 +22,20 @@ public class RacePanel extends JPanel {
     private Timer paintRaceTimer;
     private long startTime;
     private JLabel timerLabel;
+    private JLabel rankingLabel;
     private int fps = 5;
+    private int totalTourCount = 2;
 
     private RacePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
-        setLayout(new FlowLayout(FlowLayout.LEFT));
+        //setLayout(new FlowLayout(FlowLayout.LEFT));
         setFocusable(true);
+
+        rankingLabel = new JLabel("Sıralama: ");
+        rankingLabel.setHorizontalAlignment(JLabel.RIGHT);
+
+        setLayout(new BorderLayout());
+        add(rankingLabel, BorderLayout.NORTH);
 
         initializeTimers();
     }
@@ -37,49 +45,6 @@ public class RacePanel extends JPanel {
             instance = new RacePanel();
         }
         return instance;
-    }
-
-    public static Difficulty showDifficultyChooser(Difficulty initialDifficulty) {
-        JPanel panel = new JPanel();
-        ButtonGroup buttonGroup = new ButtonGroup();
-        JRadioButton easyRadioButton = new JRadioButton("Easy");
-        JRadioButton mediumRadioButton = new JRadioButton("Medium");
-        JRadioButton hardRadioButton = new JRadioButton("Hard");
-
-        buttonGroup.add(easyRadioButton);
-        buttonGroup.add(mediumRadioButton);
-        buttonGroup.add(hardRadioButton);
-
-        panel.add(easyRadioButton);
-        panel.add(mediumRadioButton);
-        panel.add(hardRadioButton);
-
-        // Set the initial selected button
-        switch (initialDifficulty) {
-            case EASY -> easyRadioButton.setSelected(true);
-            case MEDIUM -> mediumRadioButton.setSelected(true);
-            case HARD -> hardRadioButton.setSelected(true);
-        }
-
-        int choice = JOptionPane.showConfirmDialog(
-                null,
-                panel,
-                "Select Difficulty",
-                JOptionPane.OK_CANCEL_OPTION,
-                JOptionPane.PLAIN_MESSAGE
-        );
-
-        if (choice == JOptionPane.OK_OPTION) {
-            if (easyRadioButton.isSelected()) {
-                return Difficulty.EASY;
-            } else if (mediumRadioButton.isSelected()) {
-                return Difficulty.MEDIUM;
-            } else if (hardRadioButton.isSelected()) {
-                return Difficulty.HARD;
-            }
-        }
-
-        return null;
     }
 
     public ArrayList<Car> getCars() {
@@ -114,14 +79,23 @@ public class RacePanel extends JPanel {
         this.fps = fps;
     }
 
+    public JLabel getRankingLabel() {
+        return rankingLabel;
+    }
+
+    public int getTotalTourCount() {
+        return totalTourCount;
+    }
+
     public void startGame() {
-        getBotCount();
+        getPlayerAndBotCount();
         initializePlayers(playerCount);
         initializeBots(botCount);
 
-        do {
-            difficulty = showDifficultyChooser(Difficulty.MEDIUM);
-        } while (difficulty == null);
+        repaint();
+
+        showDifficultyChooser(Difficulty.MEDIUM);
+
 
         for (var bot : bots) {
             bot.getCar().setSpeed(difficulty.ordinal() + 1);
@@ -182,7 +156,6 @@ public class RacePanel extends JPanel {
         addKeyListener(player2);
     }
 
-
     private void initializeBots(int count) {
         bots = new Bot[count];
         for (int i = 0; i < bots.length; i++) {
@@ -198,7 +171,8 @@ public class RacePanel extends JPanel {
     private void initializeTimers() {
         timerLabel = new JLabel("00:00:00");
         timerLabel.setBounds(10, 10, 100, 30);
-        add(timerLabel, FlowLayout.LEFT);
+        timerLabel.setHorizontalAlignment(JLabel.LEFT);
+        //add(timerLabel, BorderLayout.NORTH);
 
         stopwatchTimer = new Timer(10, e -> {
             long currentTime = System.currentTimeMillis();
@@ -215,7 +189,133 @@ public class RacePanel extends JPanel {
         paintRaceTimer = new Timer(10, e -> {
             repaint();
             checkWinner();
+            RaceUtils.updateRankingLabel();
         });
+    }
+
+    public void checkWinner() {
+        if (!gameOver) {
+            for (var pilot : pilots) {
+                if (RaceUtils.isPilotPassedFinishLine(pilot)) {
+                    pilot.increaseCompletedTours();
+                    if (pilot.getCompletedTours() == totalTourCount){
+                        gameOver = true;
+                        stopwatchTimer.stop();
+                        paintRaceTimer.stop();
+
+                        showGameOverDialog(pilot);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    public void getPlayerAndBotCount() {
+        JSlider botCountSlider = new JSlider(JSlider.HORIZONTAL, 0, 5, botCount);
+        botCountSlider.setMajorTickSpacing(1);
+        botCountSlider.setPaintTicks(true);
+        botCountSlider.setPaintLabels(true);
+
+        JSlider playerCountSlider = new JSlider(JSlider.HORIZONTAL, 0, 2, playerCount);
+        playerCountSlider.setMajorTickSpacing(1);
+        playerCountSlider.setPaintTicks(true);
+        playerCountSlider.setPaintLabels(true);
+
+        String[] options = {"OK"};
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(2, 2));
+        panel.add(new JLabel("Select Player Count:"));
+        panel.add(playerCountSlider);
+        panel.add(new JLabel("Select Bot Count:"));
+        panel.add(botCountSlider);
+
+        int choice;
+        do {
+            choice = JOptionPane.showOptionDialog(
+                    null,
+                    panel,
+                    "Player&Bot Count Selection",
+                    JOptionPane.OK_OPTION,
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,
+                    options,
+                    options[0]
+            );
+        } while (choice == JOptionPane.CLOSED_OPTION);
+
+        playerCount = playerCountSlider.getValue();
+        botCount = botCountSlider.getValue();
+    }
+
+    public void showDifficultyChooser(Difficulty initialDifficulty) {
+        JPanel panel = new JPanel();
+        ButtonGroup buttonGroup = new ButtonGroup();
+        JRadioButton easyRadioButton = new JRadioButton("Easy");
+        JRadioButton mediumRadioButton = new JRadioButton("Medium");
+        JRadioButton hardRadioButton = new JRadioButton("Hard");
+
+        buttonGroup.add(easyRadioButton);
+        buttonGroup.add(mediumRadioButton);
+        buttonGroup.add(hardRadioButton);
+
+        panel.add(easyRadioButton);
+        panel.add(mediumRadioButton);
+        panel.add(hardRadioButton);
+
+        // Set the initial selected button
+        switch (initialDifficulty) {
+            case EASY -> easyRadioButton.setSelected(true);
+            case MEDIUM -> mediumRadioButton.setSelected(true);
+            case HARD -> hardRadioButton.setSelected(true);
+        }
+
+        int choice;
+        do {
+            choice = JOptionPane.showConfirmDialog(
+                    null,
+                    panel,
+                    "Select Difficulty",
+                    JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.PLAIN_MESSAGE
+            );
+        } while (choice == JOptionPane.CLOSED_OPTION);
+
+        if (choice == JOptionPane.OK_OPTION) {
+            if (easyRadioButton.isSelected()) {
+                difficulty = Difficulty.EASY;
+            } else if (mediumRadioButton.isSelected()) {
+                difficulty = Difficulty.MEDIUM;
+            } else if (hardRadioButton.isSelected()) {
+                difficulty = Difficulty.HARD;
+            }
+        }
+    }
+
+    public void showGameOverDialog(AbstractPilot pilot) {
+        String pilotType = (pilot instanceof Player) ? "Player" : "Bot";
+        String message = pilotType + " " + pilot.getID() + " won. Finishing time is " + timerLabel.getText();
+
+        int choice;
+        do {
+            choice = JOptionPane.showOptionDialog(
+                    null,
+                    message,
+                    "Game Over",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.INFORMATION_MESSAGE,
+                    null,
+                    new String[]{"Restart", "Quit Game"},
+                    "Restart"
+            );
+        } while (choice == JOptionPane.CLOSED_OPTION);
+
+        if (choice == JOptionPane.YES_OPTION) { // Restart
+            resetGame();
+            startGame();
+        } else if (choice == JOptionPane.NO_OPTION) {
+            System.exit(0);
+        }
     }
 
     @Override
@@ -236,110 +336,10 @@ public class RacePanel extends JPanel {
 
     private void drawCars(Graphics g) {
         for (var car : cars) {
+            g.drawLine(parkour.PARKOUR_CENTER_X, parkour.PARKOUR_CENTER_Y, car.getCarX()+Car.SIZE/2, car.getCarY()+Car.SIZE/2);
             car.draw(g);
+
         }
-    }
-
-    public void checkWinner() {
-        if (!gameOver) {
-            for (var pilot : pilots) {
-                var car = pilot.getCar();
-                if (RaceUtils.isCarPassedFinishLine(car)) {
-                    gameOver = true;
-                    stopwatchTimer.stop();
-                    paintRaceTimer.stop();
-
-                    int choice = showGameOverDialog(pilot);
-
-                    if (choice == JOptionPane.YES_OPTION) { // Restart
-                        resetGame();
-                        startGame();
-                    } else if (choice == JOptionPane.NO_OPTION || choice == JOptionPane.CLOSED_OPTION) {
-                        System.exit(0);
-                    }
-                    break;
-                }
-            }
-        }
-    }
-
-    public void getBotCount() {
-        JSlider botCountSlider = new JSlider(JSlider.HORIZONTAL, 0, 5, botCount);
-        botCountSlider.setMajorTickSpacing(1);
-        botCountSlider.setPaintTicks(true);
-        botCountSlider.setPaintLabels(true);
-
-        JSlider playerCountSlider = new JSlider(JSlider.HORIZONTAL, 0, 2, playerCount);
-        playerCountSlider.setMajorTickSpacing(1);
-        playerCountSlider.setPaintTicks(true);
-        playerCountSlider.setPaintLabels(true);
-
-        String[] options = {"OK"};
-        JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(2, 2));
-        panel.add(new JLabel("Select Player Count:"));
-        panel.add(playerCountSlider);
-        panel.add(new JLabel("Select Bot Count:"));
-        panel.add(botCountSlider);
-
-        JOptionPane.showOptionDialog(
-                null,
-                panel,
-                "Player&Bot Count Selection",
-                JOptionPane.OK_OPTION,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                options,
-                options[0]
-        );
-
-        playerCount = playerCountSlider.getValue();
-        botCount = botCountSlider.getValue();
-    }
-
-    /*public void getBotCount() {
-        JSlider slider = new JSlider(JSlider.HORIZONTAL, 0, 5, botCount);
-        slider.setMajorTickSpacing(1);
-        slider.setPaintTicks(true);
-        slider.setPaintLabels(true);
-
-        String[] options = {"OK"};
-        JPanel panel = new JPanel();
-        panel.add(new JLabel("Select Bot Count:"));
-        panel.add(slider);
-
-        JOptionPane.showOptionDialog(
-                null,
-                panel,
-                "Bot Count Selection",
-                JOptionPane.OK_OPTION,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                options,
-                options[0]
-        );
-
-        botCount = slider.getValue();
-    }*/
-
-    public int showGameOverDialog(AbstractPilot pilot) {
-        String pilotType = (pilot instanceof Player) ? "Player" : "Bot";
-        String message = pilotType + " " + pilot.getID() + " won. Finishing time is " + timerLabel.getText();
-
-        int choice;
-        do {
-            choice = JOptionPane.showOptionDialog(
-                    null,
-                    message,
-                    "Game Over",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.INFORMATION_MESSAGE,
-                    null,
-                    new String[]{"Restart", "Quit Game"},
-                    "Restart"
-            );
-        } while (choice == JOptionPane.CLOSED_OPTION);
-        return choice;
     }
 
     private enum Difficulty {

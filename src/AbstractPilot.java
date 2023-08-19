@@ -2,6 +2,8 @@ public abstract class AbstractPilot implements Runnable {
     private int id;
     private Car car;
     private int fps = 5;
+    private int completedTours = 0;
+    private boolean hasCompletedTour = false;
 
     public AbstractPilot(int id, Car car) {
         this.id = id;
@@ -26,6 +28,26 @@ public abstract class AbstractPilot implements Runnable {
 
     public int getFps() {
         return fps;
+    }
+
+    public int getCompletedTours() {
+        return completedTours;
+    }
+
+    public void setCompletedTours(int completedTours) {
+        this.completedTours = completedTours;
+    }
+
+    public boolean hasCompletedTour() {
+        return hasCompletedTour;
+    }
+
+    public void setHasCompletedTour(boolean hasCompletedTour) {
+        this.hasCompletedTour = hasCompletedTour;
+    }
+
+    public void increaseCompletedTours() {
+        completedTours++;
     }
 
     @Override
