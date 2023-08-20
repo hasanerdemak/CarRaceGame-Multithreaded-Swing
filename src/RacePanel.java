@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
@@ -14,7 +15,7 @@ public class RacePanel extends JPanel {
     private boolean gameOver = false;
     private Difficulty difficulty = Difficulty.MEDIUM;
     private int playerCount = 2;
-    private int botCount = 5;
+    private int botCount = 0;
     private Player player1;
     private Player player2;
     private Bot[] bots;
@@ -29,13 +30,15 @@ public class RacePanel extends JPanel {
     private RacePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         //setLayout(new FlowLayout(FlowLayout.LEFT));
+        setLayout(new BorderLayout());
+
         setFocusable(true);
 
-        rankingLabel = new JLabel("Sıralama: ");
-        rankingLabel.setHorizontalAlignment(JLabel.RIGHT);
+        rankingLabel = new JLabel("Ranking: ");
+        rankingLabel.setVerticalAlignment(JLabel.TOP);
+        rankingLabel.setBorder(new EmptyBorder(0, 0, 0, 10));
 
-        setLayout(new BorderLayout());
-        add(rankingLabel, BorderLayout.NORTH);
+        add(rankingLabel, BorderLayout.EAST);
 
         initializeTimers();
     }
@@ -172,7 +175,7 @@ public class RacePanel extends JPanel {
         timerLabel = new JLabel("00:00:00");
         timerLabel.setBounds(10, 10, 100, 30);
         timerLabel.setHorizontalAlignment(JLabel.LEFT);
-        //add(timerLabel, BorderLayout.NORTH);
+        add(timerLabel, BorderLayout.NORTH);
 
         stopwatchTimer = new Timer(10, e -> {
             long currentTime = System.currentTimeMillis();

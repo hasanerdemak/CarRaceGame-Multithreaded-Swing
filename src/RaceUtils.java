@@ -5,7 +5,6 @@ import java.util.Random;
 public class RaceUtils {
 
     private static final Random random = new Random();
-    static boolean pass = false;
 
     // Returns true if the new position is in the opposite direction of clockwise movement
     public static boolean isInOppositeDirection(int currentX, int currentY, int newX, int newY) {
@@ -123,7 +122,9 @@ public class RaceUtils {
         var parkour = RacePanel.getInstance().getParkour();
         var finishLineRect = new Rectangle(parkour.OUTER_CIRCLE_X, parkour.FINISH_LINE_Y, parkour.PARKOUR_WIDTH, 1);
 
-        if (car.getBounds().intersects(finishLineRect) && car.getLastY() + Car.SIZE / 2 + 1 + car.getSpeed() < parkour.FINISH_LINE_Y) {
+        if (car.getBounds().intersects(finishLineRect) &&
+                car.getLastY() + Car.SIZE / 2 > parkour.FINISH_LINE_Y &&
+                car.getCarY() + Car.SIZE / 2 <= parkour.FINISH_LINE_Y) {
             if (!pilot.hasCompletedTour()) {
                 pilot.setHasCompletedTour(true);
                 return true;
@@ -152,7 +153,11 @@ public class RaceUtils {
 
         double angle = Math.atan2(carCenterY - parkourCenterY, carCenterX - parkourCenterX);
         if (angle == Math.PI) {
-            if (isInOppositeDirection(car.getLastX(), car.getLastY(), car.getCarX(), car.getCarY()) ||
+            //todo açıda sıkıntı var. 
+            boolean a = isInOppositeDirection(car.getLastX(), car.getLastY(), car.getCarX(), car.getCarY());
+            if (car.getLabel().equals("Player 1"))
+                System.out.println(a);
+            if (a ||
                     ((car.getLastX() == car.getCarX()) && (car.getLastY() == car.getCarY()))) {
                 angle = -Math.PI;
             }
@@ -176,17 +181,7 @@ public class RaceUtils {
             }
         });
 
-        if (pilots.get(0).getCar().getLabel().equals("Player 1")) {
-            double angle1 = calculateAngleToCenter(pilots.get(0).getCar());
-            double angle2 = calculateAngleToCenter(pilots.get(1).getCar());
-            pass = true;
-        }
-
-        if (pilots.get(0).getCar().getLabel().equals("Bot 1") && pilots.get(1).getCar().getLabel().equals("Player 1") && pass) {
-            System.out.println("Botttt");
-        }
-
-        StringBuilder rankingText = new StringBuilder("<html><div style='text-align: right;'>Sıralama:<br>");
+        StringBuilder rankingText = new StringBuilder("<html><div style='text-align: left;'>Ranking:<br>");
         for (int i = 0; i < pilots.size(); i++) {
             AbstractPilot pilot = pilots.get(i);
             rankingText.append(i + 1).append(": ").append(pilot.getCar().getLabel()).append(" (").append(pilot.getCompletedTours()).append("/").append(racePanel.getTotalTourCount()).append(")");
@@ -204,17 +199,22 @@ public class RaceUtils {
         double angle1 = calculateAngleToCenter(car1);
         double angle2 = calculateAngleToCenter(car2);
 
+        if (car1.getLabel().equals("Player 1")){
+            System.out.println(angle1);
+        }
+
+
         // Açıları karşılaştırırken pozitif veya negatif sonuçlara göre sıralama yapabilirsiniz
         // Eğer saat yönünün tersine hareket ediliyorsa, tersine çevirebilirsiniz.
         int result = Double.compare(angle2, angle1);
 
         // Eğer iki açı eşitse, başka bir ölçüte göre karşılaştırma yapabilirsiniz.
-        if (result == 0) {
+        /*if (result == 0) {
             // Örneğin, arabaların mesafelerini karşılaştırmak için başka bir metot kullanabilirsiniz.
             double distance1 = calculateDistanceToCenter(car1);
             double distance2 = calculateDistanceToCenter(car2);
             result = Double.compare(distance1, distance2);
-        }
+        }*/
 
         return result;
     }
