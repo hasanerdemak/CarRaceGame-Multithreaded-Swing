@@ -97,7 +97,9 @@ public class RacePanel extends JPanel {
 
         repaint();
 
-        showDifficultyChooser(Difficulty.MEDIUM);
+        if (botCount != 0){
+            showDifficultyChooser(Difficulty.MEDIUM);
+        }
 
 
         for (var bot : bots) {
@@ -144,7 +146,7 @@ public class RacePanel extends JPanel {
     }
 
     private void initializePlayer1() {
-        var redCar = new Car(1, 25, 385, 1, Color.RED);
+        var redCar = new Car(1, 25, 385, 2, Color.RED);
         player1 = new Player(redCar, 1, 'W', 'S', 'A', 'D');
         cars.add(redCar);
         pilots.add(player1);
@@ -152,7 +154,7 @@ public class RacePanel extends JPanel {
     }
 
     private void initializePlayer2() {
-        var greenCar = new Car(2, 45, 385, 1, Color.GREEN);
+        var greenCar = new Car(2, 45, 385, 2, Color.GREEN);
         player2 = new Player(greenCar, 2, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT);
         cars.add(greenCar);
         pilots.add(player2);
@@ -195,7 +197,6 @@ public class RacePanel extends JPanel {
             RaceUtils.updateRankingLabel();
         });
     }
-
     public void checkWinner() {
         if (!gameOver) {
             for (var pilot : pilots) {
@@ -204,8 +205,9 @@ public class RacePanel extends JPanel {
                     if (pilot.getCompletedTours() == totalTourCount){
                         gameOver = true;
                         stopwatchTimer.stop();
-                        paintRaceTimer.stop();
 
+
+                        // todo bitişte tamamlanan tur sayısını güncelle
                         showGameOverDialog(pilot);
                         break;
                     }
@@ -339,7 +341,7 @@ public class RacePanel extends JPanel {
 
     private void drawCars(Graphics g) {
         for (var car : cars) {
-            g.drawLine(parkour.PARKOUR_CENTER_X, parkour.PARKOUR_CENTER_Y, car.getCarX()+Car.SIZE/2, car.getCarY()+Car.SIZE/2);
+            //g.drawLine(parkour.PARKOUR_CENTER_X, parkour.PARKOUR_CENTER_Y, car.getCarX()+Car.SIZE/2, car.getCarY()+Car.SIZE/2);
             car.draw(g);
 
         }

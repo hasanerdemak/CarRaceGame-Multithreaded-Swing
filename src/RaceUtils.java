@@ -153,7 +153,7 @@ public class RaceUtils {
 
         double angle = Math.atan2(carCenterY - parkourCenterY, carCenterX - parkourCenterX);
         if (angle == Math.PI) {
-            //todo açıda sıkıntı var. 
+            //todo açıda sıkıntı var.
             boolean a = isInOppositeDirection(car.getLastX(), car.getLastY(), car.getCarX(), car.getCarY());
             if (car.getLabel().equals("Player 1"))
                 System.out.println(a);
@@ -198,11 +198,6 @@ public class RaceUtils {
     private static int compareByPosition(Car car1, Car car2) {
         double angle1 = calculateAngleToCenter(car1);
         double angle2 = calculateAngleToCenter(car2);
-
-        if (car1.getLabel().equals("Player 1")){
-            System.out.println(angle1);
-        }
-
 
         // Açıları karşılaştırırken pozitif veya negatif sonuçlara göre sıralama yapabilirsiniz
         // Eğer saat yönünün tersine hareket ediliyorsa, tersine çevirebilirsiniz.
