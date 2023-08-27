@@ -1,8 +1,12 @@
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
 public class Car {
-    public static final int SIZE = 10;
+    public static final int SIZE = 15;
     private static final int BLINK_INTERVAL_INITIAL = 100;
     private static final int BLINK_INTERVAL_DECREMENT = 10;
     private static final int BLINK_INTERVAL_MINIMUM = 5;
@@ -17,6 +21,10 @@ public class Car {
     private String label = "";
     private boolean isBlinking = false;
 
+    private BufferedImage carImage;
+
+    private double rotationAngle = 0.0;
+
     public Car(int carID, int carX, int carY, int speed, Color color) {
         this.carID = carID;
         this.carX = this.lastX = carX;
@@ -24,6 +32,13 @@ public class Car {
         this.speed = speed;
         this.color = color;
         this.disabledColor = new Color(color.getRed() / 2, color.getGreen() / 2, color.getBlue() / 2);
+
+
+        try {
+            carImage = ImageIO.read(new File("C:\\Users\\HasanErdemAK\\IdeaProjects\\CarRaceGame-Multithreaded-Swing\\car-image.png"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         blinkingTimer = new Timer(BLINK_INTERVAL_INITIAL, e -> toggleBlinking());
     }
@@ -124,14 +139,30 @@ public class Car {
             carX += dx;
             carY += dy;
         }
+
+        if (dx != 0 || dy != 0){
+            rotationAngle = Math.atan2(dy, dx);
+        }
+
     }
 
-    public void draw(Graphics g) {
+    /*public void draw(Graphics g) {
         if (!isBlinking || RacePanel.getInstance().isGameOver()) {
             Color currentColor = disabled ? disabledColor : color;
             g.setColor(currentColor);
             g.fillRect(carX, carY, SIZE, SIZE);
             g.drawString(label, carX - ((label.length() * g.getFont().getSize()) / 8), carY - 5);
+        }
+    }*/
+
+    public void draw(Graphics g) {
+        if (!isBlinking || RacePanel.getInstance().isGameOver()) {
+            // Draw the rotated image
+            g.drawString(label, carX - ((label.length() * g.getFont().getSize()) / 8), carY - 5);
+            Graphics2D g2d = (Graphics2D) g.create();
+            g2d.rotate(rotationAngle, carX + SIZE / 2, carY + SIZE / 2);
+            g2d.drawImage(carImage, carX, carY, SIZE, SIZE, null);
+            g2d.dispose();
         }
     }
 
