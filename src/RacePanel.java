@@ -97,7 +97,7 @@ public class RacePanel extends JPanel {
 
         repaint();
 
-        if (botCount != 0){
+        if (botCount != 0) {
             showDifficultyChooser(Difficulty.MEDIUM);
         }
 
@@ -129,7 +129,7 @@ public class RacePanel extends JPanel {
         gameOver = false;
         difficulty = Difficulty.MEDIUM;
         playerCount = 2;
-        botCount = 5;
+        botCount = 0;
         removeKeyListener(player1);
         removeKeyListener(player2);
         player1 = null;
@@ -197,17 +197,17 @@ public class RacePanel extends JPanel {
             RaceUtils.updateRankingLabel();
         });
     }
+
     public void checkWinner() {
         if (!gameOver) {
             for (var pilot : pilots) {
                 if (RaceUtils.isPilotPassedFinishLine(pilot)) {
                     pilot.increaseCompletedTours();
-                    if (pilot.getCompletedTours() == totalTourCount){
+                    if (pilot.getCompletedTours() == totalTourCount) {
                         gameOver = true;
                         stopwatchTimer.stop();
 
-
-                        // todo bitişte tamamlanan tur sayısını güncelle
+                        RaceUtils.updateRankingLabel();
                         showGameOverDialog(pilot);
                         break;
                     }
@@ -341,9 +341,9 @@ public class RacePanel extends JPanel {
 
     private void drawCars(Graphics g) {
         for (var car : cars) {
+            // Line from center to car
             //g.drawLine(parkour.PARKOUR_CENTER_X, parkour.PARKOUR_CENTER_Y, car.getCarX()+Car.SIZE/2, car.getCarY()+Car.SIZE/2);
             car.draw(g);
-
         }
     }
 
