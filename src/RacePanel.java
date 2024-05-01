@@ -81,6 +81,7 @@ public class RacePanel extends JPanel {
         add(topPanel, BorderLayout.SOUTH);
 
         rankingLabel = new JLabel("Ranking: ");
+        rankingLabel.setFont(new Font("Calibre", Font.BOLD, 18));
         rankingLabel.setVerticalAlignment(JLabel.TOP);
         rankingLabel.setBorder(new EmptyBorder(0, 0, 0, 10));
 
@@ -220,9 +221,11 @@ public class RacePanel extends JPanel {
 
     private void initializeTimers() {
         timerLabel = new JLabel("00:00:00");
+        timerLabel.setFont(new Font("Calibre", Font.BOLD, 20));
         timerLabel.setBounds(10, 10, 100, 30);
         timerLabel.setHorizontalAlignment(JLabel.LEFT);
-        add(timerLabel, BorderLayout.NORTH);
+        timerLabel.setVerticalAlignment(JLabel.NORTH);
+        add(timerLabel, BorderLayout.WEST);
 
         stopwatchTimer = new Timer(10, e -> {
             long currentTime = System.currentTimeMillis();

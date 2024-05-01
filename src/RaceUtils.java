@@ -155,10 +155,9 @@ public class RaceUtils {
         if (angle == Math.PI) {
             //todo açıda sıkıntı var.
             boolean a = isInOppositeDirection(car.getLastX(), car.getLastY(), car.getCarX(), car.getCarY());
-            if (car.getLabel().equals("Player 1"))
-                System.out.println(a);
-            if (a ||
-                    ((car.getLastX() == car.getCarX()) && (car.getLastY() == car.getCarY()))) {
+//            if (car.getLabel().equals("Player 1"))
+//                System.out.println(a);
+            if (a || (car.getLastX() == car.getCarX() && car.getLastY() == car.getCarY())) {
                 angle = -Math.PI;
             }
         }
@@ -184,7 +183,10 @@ public class RaceUtils {
         StringBuilder rankingText = new StringBuilder("<html><div style='text-align: left;'>Ranking:<br>");
         for (int i = 0; i < pilots.size(); i++) {
             AbstractPilot pilot = pilots.get(i);
-            rankingText.append(i + 1).append(": ").append(pilot.getCar().getLabel()).append(" (").append(pilot.getCompletedTours()).append("/").append(racePanel.getTotalTourCount()).append(")");
+            String colorHex = "#" + Integer.toHexString(pilot.getCar().getColor().getRGB()).substring(2);
+            String playerName = "<font color='" + colorHex + "'>" + pilot.getCar().getLabel() + "</font>";
+
+            rankingText.append(i + 1).append(": ").append(playerName).append(" (").append(pilot.getCompletedTours()).append("/").append(racePanel.getTotalTourCount()).append(")");
             if (i < pilots.size() - 1) {
                 rankingText.append("<br>");
             }
