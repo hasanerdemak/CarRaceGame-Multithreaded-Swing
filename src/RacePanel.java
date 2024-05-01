@@ -1,21 +1,22 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 
 public class RacePanel extends JPanel {
 
+    // region Global Variables
     private static RacePanel instance;
     private final int WIDTH = 800;
     private final int HEIGHT = 800;
-    private Parkour parkour = new Parkour();
-    private ArrayList<Car> cars = new ArrayList<>();
-    private ArrayList<AbstractPilot> pilots = new ArrayList<>();
+    private final Parkour parkour = new Parkour();
+    private final ArrayList<Car> cars = new ArrayList<>();
+    private final ArrayList<AbstractPilot> pilots = new ArrayList<>();
+    private JLabel rankingLabel;
+    private JLabel timerLabel;
     private boolean gameOver = false;
-    private Difficulty difficulty = Difficulty.MEDIUM;
+    private Difficulty difficulty = Difficulty.Medium;
     private int playerCount = 2;
     private int botCount = 0;
     private Player player1;
@@ -24,13 +25,11 @@ public class RacePanel extends JPanel {
     private Timer stopwatchTimer;
     private Timer paintRaceTimer;
     private long startTime;
-    private JLabel timerLabel;
-    private JLabel rankingLabel;
-    private JButton stopResumeButton;
-    private JButton exitButton;
     private boolean paused = false;
     private int fps = 5;
     private int totalTourCount = 2;
+
+    // endregion
 
     private RacePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
@@ -38,54 +37,9 @@ public class RacePanel extends JPanel {
 
         setFocusable(true);
 
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        stopResumeButton = new JButton("Stop");
-        exitButton = new JButton("Exit");
-
-        stopResumeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (paused) {
-                    stopResumeButton.setText("Stop");
-                    resumeGame();
-                } else {
-                    stopResumeButton.setText("Resume");
-                    pauseGame();
-                }
-            }
-        });
-
-        exitButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                pauseGame();
-                int choice = JOptionPane.showConfirmDialog(
-                        null,
-                        "Are you sure you want to exit?",
-                        "Exit Confirmation",
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.QUESTION_MESSAGE
-                );
-
-                if (choice == JOptionPane.YES_OPTION) {
-                    System.exit(0);
-                } else {
-                    resumeGame();
-                }
-            }
-        });
-
-        topPanel.add(stopResumeButton);
-        topPanel.add(exitButton);
-
-        add(topPanel, BorderLayout.SOUTH);
-
-        rankingLabel = new JLabel("Ranking: ");
-        rankingLabel.setFont(new Font("Calibre", Font.BOLD, 18));
-        rankingLabel.setVerticalAlignment(JLabel.TOP);
-        rankingLabel.setBorder(new EmptyBorder(0, 0, 0, 10));
-
-        add(rankingLabel, BorderLayout.EAST);
+        createTimerLabel();
+        createRankingLabel();
+        createBottomPanel();
 
         initializeTimers();
     }
@@ -96,6 +50,28 @@ public class RacePanel extends JPanel {
         }
         return instance;
     }
+
+    private void initializeTimers() {
+        stopwatchTimer = new Timer(10, e -> {
+            long currentTime = System.currentTimeMillis();
+            long elapsedTime = currentTime - startTime;
+
+            int minutes = (int) (elapsedTime / 60000);
+            int seconds = (int) ((elapsedTime % 60000) / 1000);
+            int millis = (int) (elapsedTime % 1000);
+
+            String timeStr = String.format("%02d:%02d:%02d", minutes, seconds, millis / 10);
+            timerLabel.setText(timeStr);
+        });
+
+        paintRaceTimer = new Timer(10, e -> {
+            repaint();
+            checkWinner();
+            updateRankingLabel();
+        });
+    }
+
+    // region Getters and Setters
 
     public ArrayList<Car> getCars() {
         return cars;
@@ -137,16 +113,24 @@ public class RacePanel extends JPanel {
         return totalTourCount;
     }
 
+    // endregion
+
+    // region Manage Game
     public void startGame() {
-        getPlayerAndBotCount();
+        makeInitialConfigurations();
+
+        pilots.stream().map(Thread::new).forEach(Thread::start);
+
+        stopwatchTimer.start();
+        paintRaceTimer.start();
+    }
+
+    private void makeInitialConfigurations() {
+        showOptionsDialog();
         initializePlayers(playerCount);
         initializeBots(botCount);
 
         repaint();
-
-        if (botCount != 0) {
-            showDifficultyChooser(Difficulty.MEDIUM);
-        }
 
         for (var bot : bots) {
             bot.getCar().setSpeed(difficulty.ordinal() + 1);
@@ -155,25 +139,14 @@ public class RacePanel extends JPanel {
         startTime = System.currentTimeMillis();
         paintRaceTimer.setDelay(1000 / fps);
 
-        Thread[] threads = new Thread[pilots.size()];
-        for (int i = 0; i < threads.length; i++) {
-            var pilot = pilots.get(i);
-            pilot.setFPS(fps);
-            threads[i] = new Thread(pilot);
-        }
-        for (var thread : threads) {
-            thread.start();
-        }
-
-        stopwatchTimer.start();
-        paintRaceTimer.start();
+        pilots.forEach(x -> x.setFPS(fps));
     }
 
     private void resetGame() {
         cars.clear();
         pilots.clear();
         gameOver = false;
-        difficulty = Difficulty.MEDIUM;
+        difficulty = Difficulty.Medium;
         playerCount = 2;
         botCount = 0;
         removeKeyListener(player1);
@@ -181,6 +154,32 @@ public class RacePanel extends JPanel {
         player1 = null;
         player2 = null;
     }
+
+    private void pauseGame() {
+        pilots.forEach(AbstractPilot::pauseMovement);
+        player1.resetKeyPresses();
+        player2.resetKeyPresses();
+
+        stopwatchTimer.stop();
+        paintRaceTimer.stop();
+        paused = true;
+
+        repaint();
+    }
+
+    private void resumeGame() {
+        startTime = System.currentTimeMillis() - (System.currentTimeMillis() - startTime);
+        stopwatchTimer.start();
+        paintRaceTimer.start();
+        paused = false;
+
+        pilots.forEach(AbstractPilot::resumeMovement);
+        requestFocusInWindow();
+    }
+
+    // endregion
+
+    // region Initialize Players and Bots
 
     private void initializePlayers(int count) {
         if (count == 1) {
@@ -219,34 +218,9 @@ public class RacePanel extends JPanel {
         }
     }
 
-    private void initializeTimers() {
-        timerLabel = new JLabel("00:00:00");
-        timerLabel.setFont(new Font("Calibre", Font.BOLD, 20));
-        timerLabel.setBounds(10, 10, 100, 30);
-        timerLabel.setHorizontalAlignment(JLabel.LEFT);
-        timerLabel.setVerticalAlignment(JLabel.NORTH);
-        add(timerLabel, BorderLayout.WEST);
+    // endregion
 
-        stopwatchTimer = new Timer(10, e -> {
-            long currentTime = System.currentTimeMillis();
-            long elapsedTime = currentTime - startTime;
-
-            int minutes = (int) (elapsedTime / 60000);
-            int seconds = (int) ((elapsedTime % 60000) / 1000);
-            int millis = (int) (elapsedTime % 1000);
-
-            String timeStr = String.format("%02d:%02d:%02d", minutes, seconds, millis / 10);
-            timerLabel.setText(timeStr);
-        });
-
-        paintRaceTimer = new Timer(10, e -> {
-            repaint();
-            checkWinner();
-            RaceUtils.updateRankingLabel();
-        });
-    }
-
-    public void checkWinner() {
+    private void checkWinner() {
         if (!gameOver) {
             for (var pilot : pilots) {
                 if (RaceUtils.isPilotPassedFinishLine(pilot)) {
@@ -255,7 +229,7 @@ public class RacePanel extends JPanel {
                         gameOver = true;
                         stopwatchTimer.stop();
 
-                        RaceUtils.updateRankingLabel();
+                        updateRankingLabel();
                         showGameOverDialog(pilot);
                         break;
                     }
@@ -264,83 +238,93 @@ public class RacePanel extends JPanel {
         }
     }
 
-    public void getPlayerAndBotCount() {
-        JSlider botCountSlider = new JSlider(JSlider.HORIZONTAL, 0, 5, botCount);
-        botCountSlider.setMajorTickSpacing(1);
-        botCountSlider.setPaintTicks(true);
-        botCountSlider.setPaintLabels(true);
+    // region Dialogs
 
-        JSlider playerCountSlider = new JSlider(JSlider.HORIZONTAL, 0, 2, playerCount);
-        playerCountSlider.setMajorTickSpacing(1);
-        playerCountSlider.setPaintTicks(true);
-        playerCountSlider.setPaintLabels(true);
+    public void showOptionsDialog() {
+        JComboBox<Integer> playerCountComboBox = new JComboBox<>(new Integer[]{1, 2});
+        JComboBox<Integer> botCountComboBox = new JComboBox<>(new Integer[]{0, 1, 2, 3, 4, 5});
+        JComboBox<Integer> totalTourCountComboBox = new JComboBox<>(new Integer[]{1, 2, 3, 4, 5});
+        JComboBox<Difficulty> difficultyComboBox = new JComboBox<>(Difficulty.values());
 
-        String[] options = {"OK"};
-        JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(2, 2));
-        panel.add(new JLabel("Select Player Count:"));
-        panel.add(playerCountSlider);
-        panel.add(new JLabel("Select Bot Count:"));
-        panel.add(botCountSlider);
+        playerCountComboBox.setSelectedIndex(1);
+        botCountComboBox.setSelectedIndex(0);
+        totalTourCountComboBox.setSelectedIndex(1);
+        difficultyComboBox.setSelectedIndex(1);
+
+        playerCountComboBox.setPreferredSize(new Dimension(100, 25));
+        botCountComboBox.setPreferredSize(new Dimension(100, 25));
+        totalTourCountComboBox.setPreferredSize(new Dimension(100, 25));
+        difficultyComboBox.setPreferredSize(new Dimension(100, 25));
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 5, 10);
+        gbc.anchor = GridBagConstraints.WEST;
+
+        panel.add(new JLabel("Select Player Count:"), gbc);
+        gbc.gridx = 1;
+        panel.add(playerCountComboBox, gbc);
+
+        gbc.gridy++;
+        gbc.insets = new Insets(0, 0, 20, 10);
+
+        gbc.gridx = 0;
+        panel.add(new JLabel("Select Bot Count:"), gbc);
+        gbc.gridx = 1;
+        panel.add(botCountComboBox, gbc);
+
+        gbc.gridy++;
+
+        gbc.gridx = 0;
+        panel.add(new JLabel("Select Tour Count:"), gbc);
+        gbc.gridx = 1;
+        panel.add(totalTourCountComboBox, gbc);
+
+        gbc.gridy++;
+
+        gbc.gridx = 0;
+        var difficultyLabel = new JLabel("Select Difficulty:");
+        panel.add(difficultyLabel, gbc);
+        gbc.gridx = 1;
+        panel.add(difficultyComboBox, gbc);
+        difficultyComboBox.setEnabled(botCount > 0);
+        difficultyLabel.setEnabled(botCount > 0);
+
+        botCountComboBox.addActionListener(_ -> {
+            boolean enabled = (int) botCountComboBox.getSelectedItem() > 0;
+            difficultyComboBox.setEnabled(enabled);
+            difficultyLabel.setEnabled(enabled);
+        });
 
         int choice;
         do {
             choice = JOptionPane.showOptionDialog(
                     null,
                     panel,
-                    "Player&Bot Count Selection",
-                    JOptionPane.OK_OPTION,
+                    "Options",
+                    JOptionPane.YES_NO_OPTION,
                     JOptionPane.PLAIN_MESSAGE,
                     null,
-                    options,
-                    options[0]
+                    new String[]{"Ok", "Exit"},
+                    "Ok"
             );
         } while (choice == JOptionPane.CLOSED_OPTION);
 
-        playerCount = playerCountSlider.getValue();
-        botCount = botCountSlider.getValue();
-    }
-
-    public void showDifficultyChooser(Difficulty initialDifficulty) {
-        JPanel panel = new JPanel();
-        ButtonGroup buttonGroup = new ButtonGroup();
-        JRadioButton easyRadioButton = new JRadioButton("Easy");
-        JRadioButton mediumRadioButton = new JRadioButton("Medium");
-        JRadioButton hardRadioButton = new JRadioButton("Hard");
-
-        buttonGroup.add(easyRadioButton);
-        buttonGroup.add(mediumRadioButton);
-        buttonGroup.add(hardRadioButton);
-
-        panel.add(easyRadioButton);
-        panel.add(mediumRadioButton);
-        panel.add(hardRadioButton);
-
-        // Set the initial selected button
-        switch (initialDifficulty) {
-            case EASY -> easyRadioButton.setSelected(true);
-            case MEDIUM -> mediumRadioButton.setSelected(true);
-            case HARD -> hardRadioButton.setSelected(true);
-        }
-
-        int choice;
-        do {
-            choice = JOptionPane.showConfirmDialog(
-                    null,
-                    panel,
-                    "Select Difficulty",
-                    JOptionPane.OK_CANCEL_OPTION,
-                    JOptionPane.PLAIN_MESSAGE
-            );
-        } while (choice == JOptionPane.CLOSED_OPTION);
-
-        if (choice == JOptionPane.OK_OPTION) {
-            if (easyRadioButton.isSelected()) {
-                difficulty = Difficulty.EASY;
-            } else if (mediumRadioButton.isSelected()) {
-                difficulty = Difficulty.MEDIUM;
-            } else if (hardRadioButton.isSelected()) {
-                difficulty = Difficulty.HARD;
+        if (choice == 0) {
+            playerCount = (int) playerCountComboBox.getSelectedItem();
+            botCount = (int) botCountComboBox.getSelectedItem();
+            totalTourCount = (int) totalTourCountComboBox.getSelectedItem();
+            difficulty = (Difficulty) difficultyComboBox.getSelectedItem();
+        } else {
+            int exitChoice = showExitConfirmationDialog();
+            if (exitChoice == JOptionPane.YES_OPTION) {
+                System.exit(0);
+            } else {
+                showOptionsDialog();
             }
         }
     }
@@ -366,11 +350,82 @@ public class RacePanel extends JPanel {
         if (choice == JOptionPane.YES_OPTION) { // Restart
             resetGame();
             startGame();
-        } else if (choice == JOptionPane.NO_OPTION) {
-            System.exit(0);
+        } else {
+            int exitChoice = showExitConfirmationDialog();
+            if (exitChoice == JOptionPane.YES_OPTION) {
+                System.exit(0);
+            } else {
+                showGameOverDialog(pilot);
+            }
         }
     }
 
+    private int showExitConfirmationDialog() {
+        return JOptionPane.showConfirmDialog(
+                null,
+                "Are you sure you want to exit?",
+                "Exit Confirmation",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+        );
+    }
+
+    // endregion
+
+    // region Create Label and Buttons
+    private void createTimerLabel() {
+        timerLabel = new JLabel("00:00:00");
+        timerLabel.setFont(new Font("Calibre", Font.BOLD, 20));
+        timerLabel.setBounds(10, 10, 100, 30);
+        timerLabel.setHorizontalAlignment(JLabel.LEFT);
+        timerLabel.setVerticalAlignment(JLabel.NORTH);
+        add(timerLabel, BorderLayout.WEST);
+    }
+
+    private void createRankingLabel() {
+        rankingLabel = new JLabel("Ranking: ");
+        rankingLabel.setFont(new Font("Calibre", Font.BOLD, 18));
+        rankingLabel.setVerticalAlignment(JLabel.TOP);
+        rankingLabel.setBorder(new EmptyBorder(0, 0, 0, 10));
+
+        add(rankingLabel, BorderLayout.EAST);
+    }
+
+    private void createBottomPanel() {
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton stopResumeButton = new JButton("Stop");
+        JButton exitButton = new JButton("Exit");
+
+        stopResumeButton.addActionListener(_ -> {
+            if (paused) {
+                stopResumeButton.setText("Stop");
+                resumeGame();
+            } else {
+                stopResumeButton.setText("Resume");
+                pauseGame();
+            }
+        });
+
+        exitButton.addActionListener(_ -> {
+            pauseGame();
+            int choice = showExitConfirmationDialog();
+
+            if (choice == JOptionPane.YES_OPTION) {
+                System.exit(0);
+            } else {
+                resumeGame();
+            }
+        });
+
+        bottomPanel.add(stopResumeButton);
+        bottomPanel.add(exitButton);
+
+        add(bottomPanel, BorderLayout.SOUTH);
+    }
+
+    // endregion
+
+    // region Rendering
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -395,32 +450,40 @@ public class RacePanel extends JPanel {
         }
     }
 
-    private void pauseGame() {
-        pilots.forEach(AbstractPilot::pauseMovement);
-        player1.resetKeyPresses();
-        player2.resetKeyPresses();
+    // Rank the cars according to the number of laps they have completed and their position
+    private void updateRankingLabel() {
+        getPilots().sort((pilot1, pilot2) -> {
+            int compareByTours = Integer.compare(pilot2.getCompletedTours(), pilot1.getCompletedTours());
+            if (compareByTours == 0) {
+                int compareByPosition = RaceUtils.compareByPosition(pilot1.getCar(), pilot2.getCar());
+                return compareByPosition != 0 ? compareByPosition : Integer.compare(pilot1.getID(), pilot2.getID());
+            } else {
+                return compareByTours;
+            }
+        });
 
-        stopwatchTimer.stop();
-        paintRaceTimer.stop();
-        paused = true;
+        StringBuilder rankingText = new StringBuilder("<html><div style='text-align: left;'>Ranking:<br>");
+        for (int i = 0; i < getPilots().size(); i++) {
+            AbstractPilot pilot = getPilots().get(i);
+            Color color = pilot.getCar().getColor();
+            String playerName = String.format("<font color='#%02x%02x%02x'>%s</font>", color.getRed(), color.getGreen(), color.getBlue(), pilot.getCar().getLabel());
 
-        repaint();
+            rankingText.append(i + 1).append(": ").append(playerName).append(" (").append(pilot.getCompletedTours()).append("/").append(getTotalTourCount()).append(")");
+            if (i < getPilots().size() - 1) {
+                rankingText.append("<br>");
+            }
+        }
+        rankingText.append("</div></html>");
+
+        getRankingLabel().setText(rankingText.toString());
     }
 
-    private void resumeGame() {
-        startTime = System.currentTimeMillis() - (System.currentTimeMillis() - startTime);
-        stopwatchTimer.start();
-        paintRaceTimer.start();
-        paused = false;
-
-        pilots.forEach(AbstractPilot::resumeMovement);
-        requestFocusInWindow();
-    }
+    // endregion
 
     private enum Difficulty {
-        EASY,
-        MEDIUM,
-        HARD
+        Easy,
+        Medium,
+        Hard
     }
 
     public static class Parkour {

@@ -1,5 +1,4 @@
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.Random;
 
 public class RaceUtils {
@@ -11,6 +10,10 @@ public class RaceUtils {
         var parkour = RacePanel.getInstance().getParkour();
         double angleCurrent = Math.atan2(currentY - parkour.OUTER_CIRCLE_Y - (double) parkour.OUTER_CIRCLE_DIAMETER / 2, currentX - parkour.OUTER_CIRCLE_X - (double) parkour.OUTER_CIRCLE_DIAMETER / 2);
         double angleNew = Math.atan2(newY - parkour.OUTER_CIRCLE_Y - (double) parkour.OUTER_CIRCLE_DIAMETER / 2, newX - parkour.OUTER_CIRCLE_X - (double) parkour.OUTER_CIRCLE_DIAMETER / 2);
+
+        if (angleCurrent == angleNew) {
+            return false;
+        }
 
         angleCurrent = Math.toDegrees(angleCurrent);
         angleNew = Math.toDegrees(angleNew);
@@ -165,39 +168,7 @@ public class RaceUtils {
         return angle;
     }
 
-    public static void updateRankingLabel() {
-        // Arabaları tamamladıkları tur sayısına göre sıralayın
-        var racePanel = RacePanel.getInstance();
-        ArrayList<AbstractPilot> pilots = racePanel.getPilots();
-
-        pilots.sort((pilot1, pilot2) -> {
-            int compareByTours = Integer.compare(pilot2.getCompletedTours(), pilot1.getCompletedTours());
-            if (compareByTours == 0) {
-                int compareByPosition = compareByPosition(pilot1.getCar(), pilot2.getCar());
-                return compareByPosition != 0 ? compareByPosition : Integer.compare(pilot1.getID(), pilot2.getID());
-            } else {
-                return compareByTours;
-            }
-        });
-
-        StringBuilder rankingText = new StringBuilder("<html><div style='text-align: left;'>Ranking:<br>");
-        for (int i = 0; i < pilots.size(); i++) {
-            AbstractPilot pilot = pilots.get(i);
-            String colorHex = "#" + Integer.toHexString(pilot.getCar().getColor().getRGB()).substring(2);
-            String playerName = "<font color='" + colorHex + "'>" + pilot.getCar().getLabel() + "</font>";
-
-            rankingText.append(i + 1).append(": ").append(playerName).append(" (").append(pilot.getCompletedTours()).append("/").append(racePanel.getTotalTourCount()).append(")");
-            if (i < pilots.size() - 1) {
-                rankingText.append("<br>");
-            }
-        }
-        rankingText.append("</div></html>");
-
-        racePanel.getRankingLabel().setText(rankingText.toString());
-    }
-
-
-    private static int compareByPosition(Car car1, Car car2) {
+    public static int compareByPosition(Car car1, Car car2) {
         double angle1 = calculateAngleToCenter(car1);
         double angle2 = calculateAngleToCenter(car2);
 
