@@ -80,6 +80,10 @@ public class Car {
         this.label = label;
     }
 
+    public Color getColor() {
+        return color;
+    }
+
     public void reset(int x, int y) {
         carX = lastX = x;
         carY = lastY = y;

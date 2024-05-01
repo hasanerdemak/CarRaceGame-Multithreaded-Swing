@@ -78,5 +78,11 @@ public class Player extends AbstractPilot implements KeyListener {
         car.moveCar(dx, dy);
     }
 
-
+    public void resetKeyPresses() {
+        upKeyPressed = false;
+        downKeyPressed = false;
+        leftKeyPressed = false;
+        rightKeyPressed = false;
+    }
+    
 }

@@ -4,6 +4,7 @@ public abstract class AbstractPilot implements Runnable {
     private int fps = 5;
     private int completedTours = 0;
     private boolean hasCompletedTour = false;
+    private boolean movementPaused = false;
 
     public AbstractPilot(int id, Car car) {
         this.id = id;
@@ -53,8 +54,9 @@ public abstract class AbstractPilot implements Runnable {
     @Override
     public void run() {
         while (!RacePanel.getInstance().isGameOver()) {
-            handleMovement();
             try {
+                checkPaused();
+                handleMovement();
                 Thread.sleep(1000 / getFps());
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -79,6 +81,25 @@ public abstract class AbstractPilot implements Runnable {
         car.setCarY(point.y);
 
         car.enabled();
+    }
+
+    public void pauseMovement() {
+        movementPaused = true;
+    }
+
+    public void resumeMovement() {
+        movementPaused = false;
+        synchronized (this) {
+            notify();
+        }
+    }
+
+    protected void checkPaused() throws InterruptedException {
+        while (movementPaused) {
+            synchronized (this) {
+                wait();
+            }
+        }
     }
 
 }

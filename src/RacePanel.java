@@ -1,6 +1,8 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 
@@ -24,15 +26,59 @@ public class RacePanel extends JPanel {
     private long startTime;
     private JLabel timerLabel;
     private JLabel rankingLabel;
+    private JButton stopResumeButton;
+    private JButton exitButton;
+    private boolean paused = false;
     private int fps = 5;
     private int totalTourCount = 2;
 
     private RacePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
-        //setLayout(new FlowLayout(FlowLayout.LEFT));
         setLayout(new BorderLayout());
 
         setFocusable(true);
+
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        stopResumeButton = new JButton("Stop");
+        exitButton = new JButton("Exit");
+
+        stopResumeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (paused) {
+                    stopResumeButton.setText("Stop");
+                    resumeGame();
+                } else {
+                    stopResumeButton.setText("Resume");
+                    pauseGame();
+                }
+            }
+        });
+
+        exitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                pauseGame();
+                int choice = JOptionPane.showConfirmDialog(
+                        null,
+                        "Are you sure you want to exit?",
+                        "Exit Confirmation",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE
+                );
+
+                if (choice == JOptionPane.YES_OPTION) {
+                    System.exit(0);
+                } else {
+                    resumeGame();
+                }
+            }
+        });
+
+        topPanel.add(stopResumeButton);
+        topPanel.add(exitButton);
+
+        add(topPanel, BorderLayout.SOUTH);
 
         rankingLabel = new JLabel("Ranking: ");
         rankingLabel.setVerticalAlignment(JLabel.TOP);
@@ -100,7 +146,6 @@ public class RacePanel extends JPanel {
         if (botCount != 0) {
             showDifficultyChooser(Difficulty.MEDIUM);
         }
-
 
         for (var bot : bots) {
             bot.getCar().setSpeed(difficulty.ordinal() + 1);
@@ -345,6 +390,28 @@ public class RacePanel extends JPanel {
             //g.drawLine(parkour.PARKOUR_CENTER_X, parkour.PARKOUR_CENTER_Y, car.getCarX()+Car.SIZE/2, car.getCarY()+Car.SIZE/2);
             car.draw(g);
         }
+    }
+
+    private void pauseGame() {
+        pilots.forEach(AbstractPilot::pauseMovement);
+        player1.resetKeyPresses();
+        player2.resetKeyPresses();
+
+        stopwatchTimer.stop();
+        paintRaceTimer.stop();
+        paused = true;
+
+        repaint();
+    }
+
+    private void resumeGame() {
+        startTime = System.currentTimeMillis() - (System.currentTimeMillis() - startTime);
+        stopwatchTimer.start();
+        paintRaceTimer.start();
+        paused = false;
+
+        pilots.forEach(AbstractPilot::resumeMovement);
+        requestFocusInWindow();
     }
 
     private enum Difficulty {
