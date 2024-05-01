@@ -22,7 +22,7 @@ public class Bot extends AbstractPilot {
         int newX, newY;
         int newDX = 0, newDY = 0;
         do {
-            int randomNumber = random.nextInt(4);
+            int randomNumber = random.nextInt(8);
 
             if (randomNumber == 0) {
                 newDY = -speed;
@@ -30,7 +30,19 @@ public class Bot extends AbstractPilot {
                 newDY = speed;
             } else if (randomNumber == 2) {
                 newDX = -speed;
-            } else {
+            } else if (randomNumber == 3) {
+                newDX = speed;
+            } else if (randomNumber == 4) {
+                newDY = -speed;
+                newDX = -speed;
+            } else if (randomNumber == 5) {
+                newDY = -speed;
+                newDX = speed;
+            } else if (randomNumber == 6) {
+                newDY = speed;
+                newDX = -speed;
+            } else if (randomNumber == 7) {
+                newDY = speed;
                 newDX = speed;
             }
 
