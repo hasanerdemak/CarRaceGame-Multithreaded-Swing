@@ -12,8 +12,8 @@ public class RacePanel extends JPanel {
 
     // region Global Variables
     private static RacePanel instance;
-    private final static int WIDTH = 900;
-    private final static int HEIGHT = 800;
+    private final static int WIDTH = RaceFrame.WIDTH;
+    private final static int HEIGHT = RaceFrame.HEIGHT;
     private final Parkour parkour = new Parkour();
     private final ArrayList<Car> cars = new ArrayList<>();
     private final ArrayList<AbstractPilot> pilots = new ArrayList<>();
@@ -282,7 +282,7 @@ public class RacePanel extends JPanel {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.insets = new Insets(0, 0, 5, 10);
+        gbc.insets = new Insets(5, 0, 5, 10);
         gbc.anchor = GridBagConstraints.WEST;
 
         panel.add(new JLabel("Select Player Count:"), gbc);
@@ -290,12 +290,14 @@ public class RacePanel extends JPanel {
         panel.add(playerCountComboBox, gbc);
 
         gbc.gridy++;
-        gbc.insets = new Insets(0, 0, 20, 10);
+        gbc.insets = new Insets(10, 0, 10, 10);
 
         gbc.gridx = 0;
         panel.add(new JLabel("Select Bot Count:"), gbc);
         gbc.gridx = 1;
         panel.add(botCountComboBox, gbc);
+
+        addSeperator(panel, gbc);
 
         gbc.gridy++;
 
@@ -303,6 +305,8 @@ public class RacePanel extends JPanel {
         panel.add(new JLabel("Select Tour Count:"), gbc);
         gbc.gridx = 1;
         panel.add(totalTourCountComboBox, gbc);
+
+        addSeperator(panel, gbc);
 
         gbc.gridy++;
 
@@ -313,6 +317,8 @@ public class RacePanel extends JPanel {
         panel.add(difficultyComboBox, gbc);
         difficultyComboBox.setEnabled(botCount > 0);
         difficultyLabel.setEnabled(botCount > 0);
+
+        addSeperator(panel, gbc);
 
         gbc.gridy++;
 
@@ -355,6 +361,18 @@ public class RacePanel extends JPanel {
                 showOptionsDialog();
             }
         }
+    }
+
+    private static void addSeperator(JPanel panel, GridBagConstraints gbc) {
+        JLabel separator = new JLabel();
+        separator.setPreferredSize(new Dimension(panel.getPreferredSize().width - 20, 1));
+        separator.setBackground(Color.GRAY);
+        separator.setOpaque(true);
+        gbc.gridy++;
+        gbc.gridx = 0;
+        gbc.gridwidth = 2;
+        panel.add(separator, gbc);
+        gbc.gridwidth = 1;
     }
 
     public void showGameOverDialog(AbstractPilot pilot) {

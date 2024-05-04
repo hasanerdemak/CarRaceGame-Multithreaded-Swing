@@ -2,13 +2,13 @@ package Race;
 
 import javax.swing.*;
 
-public class CarRace extends JFrame {
+public class RaceFrame extends JFrame {
 
-    private final int WIDTH = 800;
-    private final int HEIGHT = 800;
+    public static final int WIDTH = 900;
+    public static final int HEIGHT = 800;
     private RacePanel racePanel;
 
-    public CarRace() {
+    public RaceFrame() {
         setTitle("Car Race");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(WIDTH, HEIGHT);
