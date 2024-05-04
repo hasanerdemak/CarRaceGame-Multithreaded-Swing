@@ -1,3 +1,7 @@
+package Entities;
+
+import Utils.RaceUtils;
+
 import java.util.Random;
 
 public class Bot extends AbstractPilot {

@@ -1,3 +1,7 @@
+package Entities;
+
+import Utils.RaceUtils;
+
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
@@ -84,5 +88,5 @@ public class Player extends AbstractPilot implements KeyListener {
         leftKeyPressed = false;
         rightKeyPressed = false;
     }
-    
+
 }

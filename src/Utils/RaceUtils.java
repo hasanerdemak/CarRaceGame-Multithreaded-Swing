@@ -1,3 +1,10 @@
+package Utils;
+
+import Entities.AbstractPilot;
+import Entities.Car;
+import Race.RacePanel;
+
+import javax.swing.*;
 import java.awt.*;
 import java.util.Random;
 
@@ -200,5 +207,17 @@ public class RaceUtils {
         double distance = Math.sqrt(Math.pow(carCenterX - parkourCenterX, 2) + Math.pow(carCenterY - parkourCenterY, 2));
 
         return distance;
+    }
+
+    public static ImageIcon createImageIcon(String path, float scale) {
+        java.net.URL imgURL = RaceUtils.class.getResource(path);
+        if (imgURL != null) {
+            ImageIcon icon = new ImageIcon(imgURL);
+            Image image = icon.getImage().getScaledInstance((int) (icon.getIconWidth() * scale), (int) (icon.getIconHeight() * scale), Image.SCALE_SMOOTH);
+            return new ImageIcon(image);
+        } else {
+            System.err.println("Couldn't find file: " + path);
+            return null;
+        }
     }
 }

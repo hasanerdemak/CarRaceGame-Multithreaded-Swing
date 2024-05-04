@@ -1,3 +1,8 @@
+package Entities;
+
+import Race.RacePanel;
+import Utils.RaceUtils;
+
 import javax.swing.*;
 import java.awt.*;
 

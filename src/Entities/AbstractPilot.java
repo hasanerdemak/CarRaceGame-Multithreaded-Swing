@@ -1,3 +1,8 @@
+package Entities;
+
+import Race.RacePanel;
+import Utils.RaceUtils;
+
 public abstract class AbstractPilot implements Runnable {
     private int id;
     private Car car;

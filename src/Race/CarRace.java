@@ -1,3 +1,5 @@
+package Race;
+
 import javax.swing.*;
 
 public class CarRace extends JFrame {
@@ -20,8 +22,7 @@ public class CarRace extends JFrame {
         setVisible(true);
     }
 
-    public void game(int n) {
-        racePanel.setFPS(n);
+    public void game() {
         racePanel.startGame();
         racePanel.requestFocus();
     }

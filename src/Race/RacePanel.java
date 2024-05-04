@@ -1,5 +1,9 @@
+package Race;
+
+import Entities.*;
+import Utils.RaceUtils;
+
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
@@ -8,8 +12,8 @@ public class RacePanel extends JPanel {
 
     // region Global Variables
     private static RacePanel instance;
-    private final int WIDTH = 800;
-    private final int HEIGHT = 800;
+    private final static int WIDTH = 900;
+    private final static int HEIGHT = 800;
     private final Parkour parkour = new Parkour();
     private final ArrayList<Car> cars = new ArrayList<>();
     private final ArrayList<AbstractPilot> pilots = new ArrayList<>();
@@ -25,8 +29,9 @@ public class RacePanel extends JPanel {
     private Timer stopwatchTimer;
     private Timer paintRaceTimer;
     private long startTime;
+    private long pauseTime;
     private boolean paused = false;
-    private int fps = 5;
+    private int fps = 100;
     private int totalTourCount = 2;
 
     // endregion
@@ -34,6 +39,7 @@ public class RacePanel extends JPanel {
     private RacePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setLayout(new BorderLayout());
+        setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
         setFocusable(true);
 
@@ -64,7 +70,7 @@ public class RacePanel extends JPanel {
             timerLabel.setText(timeStr);
         });
 
-        paintRaceTimer = new Timer(10, e -> {
+        paintRaceTimer = new Timer(1000 / fps, e -> {
             repaint();
             checkWinner();
             updateRankingLabel();
@@ -123,6 +129,8 @@ public class RacePanel extends JPanel {
 
         stopwatchTimer.start();
         paintRaceTimer.start();
+
+        requestFocusInWindow();
     }
 
     private void makeInitialConfigurations() {
@@ -146,6 +154,7 @@ public class RacePanel extends JPanel {
         cars.clear();
         pilots.clear();
         gameOver = false;
+        paused = false;
         difficulty = Difficulty.Medium;
         playerCount = 2;
         botCount = 0;
@@ -153,9 +162,12 @@ public class RacePanel extends JPanel {
         removeKeyListener(player2);
         player1 = null;
         player2 = null;
+        timerLabel.setText("00:00:00");
+        rankingLabel.setText("");
     }
 
     private void pauseGame() {
+        pauseTime = System.currentTimeMillis();
         pilots.forEach(AbstractPilot::pauseMovement);
         player1.resetKeyPresses();
         player2.resetKeyPresses();
@@ -168,10 +180,11 @@ public class RacePanel extends JPanel {
     }
 
     private void resumeGame() {
-        startTime = System.currentTimeMillis() - (System.currentTimeMillis() - startTime);
+        startTime += (System.currentTimeMillis() - pauseTime);
+        paused = false;
+
         stopwatchTimer.start();
         paintRaceTimer.start();
-        paused = false;
 
         pilots.forEach(AbstractPilot::resumeMovement);
         requestFocusInWindow();
@@ -191,7 +204,9 @@ public class RacePanel extends JPanel {
     }
 
     private void initializePlayer1() {
-        var redCar = new Car(1, 25, 385, 2, Color.RED);
+        var yPosition = parkour.OUTER_CIRCLE_Y + parkour.OUTER_CIRCLE_RADIUS - Car.SIZE / 2;
+        var xPosition = parkour.OUTER_CIRCLE_X + 5;
+        var redCar = new Car(1, xPosition, yPosition, 2, Color.RED);
         player1 = new Player(redCar, 1, 'W', 'S', 'A', 'D');
         cars.add(redCar);
         pilots.add(player1);
@@ -199,7 +214,9 @@ public class RacePanel extends JPanel {
     }
 
     private void initializePlayer2() {
-        var greenCar = new Car(2, 45, 385, 2, Color.GREEN);
+        var yPosition = parkour.OUTER_CIRCLE_Y + parkour.OUTER_CIRCLE_RADIUS - Car.SIZE / 2;
+        var xPosition = parkour.OUTER_CIRCLE_X + 25;
+        var greenCar = new Car(2, xPosition, yPosition, 2, Color.GREEN);
         player2 = new Player(greenCar, 2, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT);
         cars.add(greenCar);
         pilots.add(player2);
@@ -207,10 +224,10 @@ public class RacePanel extends JPanel {
     }
 
     private void initializeBots(int count) {
+        var startY = parkour.OUTER_CIRCLE_Y + parkour.OUTER_CIRCLE_RADIUS - Car.SIZE / 2;
         bots = new Bot[count];
         for (int i = 0; i < bots.length; i++) {
-            int startX = 45 + (i + 1) * 20;
-            int startY = 385;
+            int startX = parkour.OUTER_CIRCLE_X + 5 + (i + 2) * 20;
             var newCar = new Car(3 + i, startX, startY, difficulty.ordinal() + 1, Color.BLACK);
             bots[i] = new Bot(newCar, i + 1);
             cars.add(newCar);
@@ -245,16 +262,19 @@ public class RacePanel extends JPanel {
         JComboBox<Integer> botCountComboBox = new JComboBox<>(new Integer[]{0, 1, 2, 3, 4, 5});
         JComboBox<Integer> totalTourCountComboBox = new JComboBox<>(new Integer[]{1, 2, 3, 4, 5});
         JComboBox<Difficulty> difficultyComboBox = new JComboBox<>(Difficulty.values());
+        JComboBox<String> gameSpeedComboBox = new JComboBox<>(new String[]{"x0.5", "x1", "x2", "x3"});
 
         playerCountComboBox.setSelectedIndex(1);
         botCountComboBox.setSelectedIndex(0);
         totalTourCountComboBox.setSelectedIndex(1);
         difficultyComboBox.setSelectedIndex(1);
+        gameSpeedComboBox.setSelectedIndex(1);
 
         playerCountComboBox.setPreferredSize(new Dimension(100, 25));
         botCountComboBox.setPreferredSize(new Dimension(100, 25));
         totalTourCountComboBox.setPreferredSize(new Dimension(100, 25));
         difficultyComboBox.setPreferredSize(new Dimension(100, 25));
+        gameSpeedComboBox.setPreferredSize(new Dimension(100, 25));
 
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
@@ -294,6 +314,13 @@ public class RacePanel extends JPanel {
         difficultyComboBox.setEnabled(botCount > 0);
         difficultyLabel.setEnabled(botCount > 0);
 
+        gbc.gridy++;
+
+        gbc.gridx = 0;
+        panel.add(new JLabel("Select Game Speed:"), gbc);
+        gbc.gridx = 1;
+        panel.add(gameSpeedComboBox, gbc);
+
         botCountComboBox.addActionListener(_ -> {
             boolean enabled = (int) botCountComboBox.getSelectedItem() > 0;
             difficultyComboBox.setEnabled(enabled);
@@ -319,6 +346,7 @@ public class RacePanel extends JPanel {
             botCount = (int) botCountComboBox.getSelectedItem();
             totalTourCount = (int) totalTourCountComboBox.getSelectedItem();
             difficulty = (Difficulty) difficultyComboBox.getSelectedItem();
+            fps = (int) (100 * (gameSpeedComboBox.getSelectedIndex() == 0 ? 0.5 : gameSpeedComboBox.getSelectedIndex()));
         } else {
             int exitChoice = showExitConfirmationDialog();
             if (exitChoice == JOptionPane.YES_OPTION) {
@@ -383,26 +411,48 @@ public class RacePanel extends JPanel {
     }
 
     private void createRankingLabel() {
-        rankingLabel = new JLabel("Ranking: ");
+        rankingLabel = new JLabel();
         rankingLabel.setFont(new Font("Calibre", Font.BOLD, 18));
         rankingLabel.setVerticalAlignment(JLabel.TOP);
-        rankingLabel.setBorder(new EmptyBorder(0, 0, 0, 10));
 
         add(rankingLabel, BorderLayout.EAST);
     }
 
     private void createBottomPanel() {
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        JButton stopResumeButton = new JButton("Stop");
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+
+        // region Center panel for buttons
+        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        buttonsPanel.setBorder(BorderFactory.createEmptyBorder(25, 0, 0, 0));
+        JButton pauseResumeButton = new JButton("Pause");
+        JButton restartButton = new JButton("Restart");
         JButton exitButton = new JButton("Exit");
 
-        stopResumeButton.addActionListener(_ -> {
+        pauseResumeButton.addActionListener(_ -> {
             if (paused) {
-                stopResumeButton.setText("Stop");
+                pauseResumeButton.setText("Pause");
                 resumeGame();
             } else {
-                stopResumeButton.setText("Resume");
+                pauseResumeButton.setText("Resume");
                 pauseGame();
+            }
+        });
+
+        restartButton.addActionListener(_ -> {
+            pauseGame();
+            var choice = JOptionPane.showConfirmDialog(
+                    null,
+                    "Are you sure you want to restart the game?",
+                    "Restart Game",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE
+            );
+
+            if (choice == JOptionPane.YES_OPTION) { // Restart
+                resetGame();
+                startGame();
+            } else {
+                resumeGame();
             }
         });
 
@@ -417,8 +467,28 @@ public class RacePanel extends JPanel {
             }
         });
 
-        bottomPanel.add(stopResumeButton);
-        bottomPanel.add(exitButton);
+        buttonsPanel.add(pauseResumeButton);
+        buttonsPanel.add(restartButton);
+        buttonsPanel.add(exitButton);
+
+        bottomPanel.add(buttonsPanel, BorderLayout.WEST);
+
+        // endregion
+
+        // region Panel for key images
+        JPanel keyImagePanel = new JPanel(new GridLayout(2, 2, 20, -7));
+
+        ImageIcon image1 = RaceUtils.createImageIcon("../resources/images/wasd_keys.png", 0.09F);
+        ImageIcon image2 = RaceUtils.createImageIcon("../resources/images/arrow_keys.png", 0.09F);
+
+        keyImagePanel.add(new JLabel("Player 1 Keys"));
+        keyImagePanel.add(new JLabel("Player 2 Keys"));
+        keyImagePanel.add(new JLabel(image1));
+        keyImagePanel.add(new JLabel(image2));
+
+        bottomPanel.add(keyImagePanel, BorderLayout.EAST);
+
+        //endregion
 
         add(bottomPanel, BorderLayout.SOUTH);
     }
@@ -483,16 +553,19 @@ public class RacePanel extends JPanel {
     private enum Difficulty {
         Easy,
         Medium,
-        Hard
+        Hard,
+        Expert
     }
 
     public static class Parkour {
-        public final int OUTER_CIRCLE_X = 20;
-        public final int OUTER_CIRCLE_Y = 40;
         public final int OUTER_CIRCLE_DIAMETER = 700;
-        public final int INNER_CIRCLE_X = 170;
-        public final int INNER_CIRCLE_Y = 190;
         public final int INNER_CIRCLE_DIAMETER = 400;
+        public final int OUTER_CIRCLE_X = RacePanel.WIDTH / 2 - OUTER_CIRCLE_DIAMETER / 2;
+        public final int OUTER_CIRCLE_Y = RacePanel.HEIGHT / 2 - OUTER_CIRCLE_DIAMETER / 2 - 20;
+        public final int OUTER_CIRCLE_RADIUS = OUTER_CIRCLE_DIAMETER / 2;
+        public final int INNER_CIRCLE_RADIUS = INNER_CIRCLE_DIAMETER / 2;
+        public final int INNER_CIRCLE_X = OUTER_CIRCLE_X + (OUTER_CIRCLE_RADIUS - INNER_CIRCLE_RADIUS);
+        public final int INNER_CIRCLE_Y = OUTER_CIRCLE_Y + (OUTER_CIRCLE_RADIUS - INNER_CIRCLE_RADIUS);
         public final int PARKOUR_CENTER_X = OUTER_CIRCLE_X + OUTER_CIRCLE_DIAMETER / 2;
         public final int PARKOUR_CENTER_Y = OUTER_CIRCLE_Y + OUTER_CIRCLE_DIAMETER / 2;
         public final int FINISH_LINE_Y = PARKOUR_CENTER_Y;
