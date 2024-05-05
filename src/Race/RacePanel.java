@@ -496,8 +496,8 @@ public class RacePanel extends JPanel {
         // region Panel for key images
         JPanel keyImagePanel = new JPanel(new GridLayout(2, 2, 20, -7));
 
-        ImageIcon image1 = RaceUtils.createImageIcon("../resources/images/wasd_keys.png", 0.09F);
-        ImageIcon image2 = RaceUtils.createImageIcon("../resources/images/arrow_keys.png", 0.09F);
+        ImageIcon image1 = RaceUtils.createImageIcon("/resources/images/wasd_keys.png", 0.09F);
+        ImageIcon image2 = RaceUtils.createImageIcon("/resources/images/arrow_keys.png", 0.09F);
 
         keyImagePanel.add(new JLabel("Player 1 Keys"));
         keyImagePanel.add(new JLabel("Player 2 Keys"));
