@@ -206,7 +206,7 @@ public class RacePanel extends JPanel {
     private void initializePlayer1() {
         var yPosition = parkour.OUTER_CIRCLE_Y + parkour.OUTER_CIRCLE_RADIUS - Car.SIZE / 2;
         var xPosition = parkour.OUTER_CIRCLE_X + 5;
-        var redCar = new Car(1, xPosition, yPosition, 2, Color.RED);
+        var redCar = new Car(1, xPosition, yPosition, 2, new Color(240, 75, 55));
         player1 = new Player(redCar, 1, 'W', 'S', 'A', 'D');
         cars.add(redCar);
         pilots.add(player1);
@@ -216,7 +216,7 @@ public class RacePanel extends JPanel {
     private void initializePlayer2() {
         var yPosition = parkour.OUTER_CIRCLE_Y + parkour.OUTER_CIRCLE_RADIUS - Car.SIZE / 2;
         var xPosition = parkour.OUTER_CIRCLE_X + 25;
-        var greenCar = new Car(2, xPosition, yPosition, 2, Color.GREEN);
+        var greenCar = new Car(2, xPosition, yPosition, 2, new Color(95, 125, 190));
         player2 = new Player(greenCar, 2, KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT);
         cars.add(greenCar);
         pilots.add(player2);
